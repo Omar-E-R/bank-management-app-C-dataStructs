@@ -14,8 +14,8 @@ Compte init_acc()
     
     newCompte->joint=NonJoint;
 
-    (newCompte->titulaires)[0]= NULL;
-    (newCompte->titulaires)[1]= NULL;
+    (newCompte->clients)[0]= NULL;
+    (newCompte->clients)[1]= NULL;
 
     newCompte->next_compte=NULL;
 
@@ -28,23 +28,23 @@ Compte new_acc(Client client1, Client client2, float solde)
 
     srand(time(NULL));
 
-    int num=(rand % 1000);
+    int num=(rand() % 1000);
 
-    newCompte->numero= client->numero_client *1000 + num;
+    newCompte->numero= client1->numero_client *1000 + num;
 
     newCompte->solde=solde;
 
-    newCompte->statut=Actif;
+    newCompte->statut=EnAttente;
 
     if(client1!=NULL)
     {
-        (newCompte->titulaires)[0] = client1;
-        if (client1->compte == NULL)
-            client1->compte=newCompte;
+        (newCompte->clients)[0] = client1;
+        if (client1->comptes == NULL)
+            client1->comptes=newCompte;
         else
         {
 
-            Compte count = client1->compte;
+            Compte count = client1->comptes;
 
             while (count->next_compte != NULL)
             {
@@ -58,14 +58,14 @@ Compte new_acc(Client client1, Client client2, float solde)
     {
         newCompte->joint=Joint;
 
-        (newCompte->titulaires)[1] = client2;
+        (newCompte->clients)[1] = client2;
 
-        if (client2->compte == NULL)
-            client2->compte = newCompte;
+        if (client2->comptes == NULL)
+            client2->comptes = newCompte;
         else
         {
 
-            Compte count = client2->compte;
+            Compte count = client2->comptes;
 
             while (count->next_compte != NULL)
             {
