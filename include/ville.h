@@ -2,22 +2,14 @@
 #include <stdlib.h>
 #include "agence.h"
 
-enum ville
+typedef enum
 {
     Toulouse=31
     //on peut en rajouter d'autres
-};
+}Nom_Ville;
 
-typedef struct ville
-{
-    int code_ville;
+typedef struct ville *Ville;
+//Pour authentificer les logins, les logins
+Client decrypt_ville(Login user);//uses agence.h/decrypt_client
 
-    char* nom_ville;
-
-    Agence liste_agences;
-
-    Ville next_ville;
-    
-}*Ville;
-
-
+Compte decrypt_ville_ad(Login_Admin user);//uses agence.h/decrypt_client
