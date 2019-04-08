@@ -1,19 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <crypt.h>
 #include "ville.h"
-
+#define LOGIN_ID_SIZE 10
+#define LOGIN_KEY_SIZE 10
+#define CODE_AGENCE_SIZE 37
 typedef struct login
 {
-    int login_id;
-    int key;//car le login va etre decrypte une premiere fois donc on utilise jamais le vrai mots de pass
+    const char* login_id;
+    const char* key;//car le login va etre decrypte une premiere fois donc on utilise jamais le vrai mots de pass
 
 }*Login;
 
 typedef struct login_admin
 {
-    int code_agence;
-    int login_id;
-    int pin;
+    const char* code_agence;
+    const char* login_id;
+    const char* pin;
 
 }*Login_Admin;
 

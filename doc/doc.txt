@@ -1,0 +1,14 @@
+#we need all functions responsible for scanning the input from the user
+
+#Im not sure if i should allocate the memory for the user input in those functions or in the base functions
+
+#UUID will be identifying every struct and it will be the way of lloking for the data file
+
+#Each data file will be named as the struct uuid that corresponds to it
+
+#I still have to finish implementing the "agence.h", "ville.h" with all of it functions
+
+#I still have to implement the "json.h" and all of it functions using libjansson
+
+#I still have to implement the userinterface TUI using libncurses
+

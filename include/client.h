@@ -8,54 +8,77 @@
 
 typedef enum
 {
-    nom,
-    prenom,
-    ate_de_naissance,
-    email,
-    adresse,
-    code_postale,
-    ville,
-    complement_ad,
-    numero_mobile,
-    numero_fixe
+	UUID_CLIENT,
+    NOM,
+    PRENOM,
+    DATE_DE_NAISSANCE,
+    EMAIL,
+    ADRESSE,
+    CODE_POSTALE,
+    NOM_VILLE,
+    COMPLEMENT_AD,
+    NUMERO_MOBILE,
+    NUMERO_FIXE,
+    NULL_,
+    NOT_NULL_,
+    COLLUSION
+
 
 } type_donnees;
+
+enum allocations
+{
+    NOM_SIZE=30,
+    PRENOM_SIZE=30,
+    DATE_DE_NAISSANCE_SIZE=9,
+    EMAIL_SIZE=45,
+    ADRESSE_SIZE=50,
+    CODE_POSTALE_SIZE=6,
+    NOM_VILLE_SIZE=30,
+    COMPLEMENT_AD_SIZE=50,
+    NUMERO_MOBILE_SIZE=11,
+    NUMERO_FIXE_SIZE=11
+
+};
 
 typedef struct donnees_personnelles
 {
 
-    char *nom;
-    char *prenom;
+    const char *nom;
+    const char *prenom;
 
-    int date_de_naissance;
+    const char* date_de_naissance;
 
-    char *email;
-    char *adresse;
+    const char *email;
+    const char *adresse;
 
     int code_postale;
+    int MouMme;
 
-    char *ville;
-    char *complement_ad;
-    char *numero_mobile;
-    char *numero_fixe;
+    const char *nom_ville;
+    const char *complement_ad;
+    const char *numero_mobile;
+    const char *numero_fixe;
 
 } * Donnees_Personnelles;
 
 
-typedef struct{
+typedef struct client{
+
     int statut;
 
-    int numero_client;
+	const char* uuid_client;
 
     Donnees_Personnelles donnees_perso;
 
-    Comptes comptes;
-
-    Client next_client;
-
-    Login user;
+    Compte comptes;
 
 }* Client;
+
+
+Client Client_Courant;
+
+type_donnees *equalAllClients(Client client1, Client client2);
 
 Client new_client();
 

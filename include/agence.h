@@ -1,37 +1,55 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include "client.h"
+#include "generateRand.h"
 
-typedef struct
+typedef struct liste_compte
 {
-    int code_agence;
-    
-    char* nom_agence;
+    Compte compte;
+
+    lComptes next_compte;
+
+} *lComptes;
+
+typedef struct liste_clients
+{
+    Client client;
+    Login user;
+    lClients next_client;
+
+} *lClients;
+
+typedef struct agence
+{
+    const char* uuid_agence;
+
+	const char *code_bic;
+	const char *indicatif_agence;
+	const char *domiciliation_agence;
 
     Compte liste_comptes;
 
-    Client liste_clients;
+    lClients liste_clients;
 
-    Admin admins;
+    lConseiller liste_conseillers;
 
 }*Agence;
 
-typedef struct
+typedef struct conseiller
 {
-    int code_agence;
+	const char *uuid_conseiller;
 
-    char* nom_admin;
+	Donnees_Personnelles info_conseiller;
 
-    int login_id;
+}*Conseiller;
 
-    int Key;
-
-    int date_de_naissance;//utilise pour encrypter le mots de pass
-
-
-     
-
-}*Admin;
+typedef struct liste_conseiller
+{
+    Login login_conseiller;
+    Conseiller conseiller;
+	
+	lConseiller next_conseiller;
+}*lConseiller;
 
 
 Client decrypt_client();
