@@ -14,10 +14,18 @@ Ville init_ville()
 	Ville ville = (Ville)calloc(1, sizeof(struct ville));
 
 	ville->uuid_ville = (const char *)calloc(UUID_SIZE, sizeof(char));
-	// ville->code_postale = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
-	// ville->nom_ville = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
+	ville->code_postale = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
+	ville->nom_ville = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
 
 	return ville;
+}
+
+lData init_data()
+{
+	lData data = (lData)calloc(1, sizeof(struct data));
+
+
+	return data;
 }
 
 Admin init_admin()
@@ -45,8 +53,8 @@ Ville new_ville(const char* nom_ville, const char* code_postale)
 	Ville ville = init_ville();
 
 	uuid_gen(ville->uuid_ville);
-	ville->code_postale = nom_ville; 
-	ville->nom_ville =  code_postale;
+	strcpy(ville->code_postale, code_postale);
+	strcpy(ville->nom_ville, nom_ville);
 
 	return ville;
 }
@@ -58,9 +66,14 @@ int addAgence(lAgence liste_agence, Agence agence)
 	{
 		return FAILURE;
 	}
-	if (liste_agence->next_agence == NULL && isEqualConseiller(liste_agence->agence, agence) != MATCH)
+	if(liste_agence->agence==NULL && agence!=NULL)
 	{
-		liste_agence->next_agence = agence;
+		liste_agence->agence=agence;
+	}
+	if (liste_agence->next_agence == NULL && isEqualAgence(liste_agence->agence, agence) != MATCH)
+	{
+		liste_agence->next_agence=init_liste_agence();
+		liste_agence->next_agence->agence = agence;
 
 		return SUCCESS;
 	}
@@ -86,9 +99,15 @@ int addVille(lData liste_ville, Ville ville)
 	{
 		return FAILURE;
 	}
-	if (liste_ville->next_ville == NULL && isEqualConseiller(liste_ville->ville, ville) != MATCH)
+	if (liste_ville->ville== NULL && ville != NULL)
 	{
-		liste_ville->next_ville = ville;
+		liste_ville->ville=ville;
+		return SUCCESS;
+	}
+	if (liste_ville->next_ville == NULL && isEqualVille(liste_ville->ville, ville) != MATCH)
+	{
+		liste_ville->next_ville=init_data();
+		liste_ville->next_ville->ville = ville;
 
 		return SUCCESS;
 	}
@@ -100,7 +119,7 @@ int addAdmin(Admin lAdmin, Admin admin)
 	{
 		return FAILURE;
 	}
-	if (lAdmin->next_admin == NULL && isEqualConseiller(lAdmin, admin) != MATCH)
+	if (lAdmin->next_admin == NULL && isEqualAdmin(lAdmin, admin) != MATCH)
 	{
 		lAdmin->next_admin = admin;
 

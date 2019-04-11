@@ -17,5 +17,6 @@
  */
 
 const char* uuid_gen(const char* uuid);
-
+int* login_id_generator(int *code);
+int login_id_decoding(int* login_id);
 const char *indicatif_gen(const char *indicatif, const char *uuid_ville); //5chiffres

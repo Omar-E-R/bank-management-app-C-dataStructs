@@ -7,7 +7,7 @@
 
 #define BANK_NUMBER 40305
 
-typedef enum type_compte
+typedef enum
 {
 	UNINTIALIZED,
     JOINT,
@@ -21,7 +21,7 @@ typedef enum type_compte
 
 } type_compte;
 
-typedef enum return_type
+typedef enum 
 {
     MATCH,
     NO_MATCH,
@@ -33,7 +33,7 @@ typedef enum return_type
     //on peut en rajouter d'autres
 } return_type;
 
-typedef enum type_element
+typedef enum 
 {
     IBAN,
     CODE_BIC,
@@ -78,17 +78,17 @@ typedef struct rib
 
 typedef struct compte
 {
-    type_compte statut; //compte supprime ? i.e actif ou non actif
-    type_compte joint_ou_nonjoint;
-    type_compte type_compte;//LIVRET...
+    const char* uuid_compte;
 
     Rib rib;
 
     Client_s titulaire;
 
-    double solde;
+    type_compte statut; //compte supprime ? i.e actif ou non actif
+    type_compte nature_compte;
+    type_compte type_compte;//LIVRET...
 
-    const char* uuid_compte;
+    double solde;
 
     const char *operations;//A FILENAME OR MAYBE I WILL CHANGE IT TO A FILE POINTER
 

@@ -25,7 +25,7 @@ lClients init_liste_clients()
 Conseiller init_conseiller()
 {
 	Conseiller conseiller=(Conseiller)calloc(1, sizeof(struct conseiller));
-	
+	int privilege_manager;
 	conseiller->uuid_conseiller = (const char *)calloc(UUID_SIZE, sizeof(char));
 
 	return conseiller; 
@@ -108,7 +108,8 @@ int addConseiller(lConseiller liste_conseiller, Conseiller conseiller)
 	}
 	if(liste_conseiller->next_conseiller==NULL && isEqualConseiller(liste_conseiller->conseiller,conseiller)!=MATCH)
 	{
-		liste_conseiller->next_conseiller=conseiller;
+		liste_conseiller->next_conseiller=init_liste_conseiller();
+		liste_conseiller->next_conseiller->conseiller=conseiller;
 
 		return SUCCESS;
 
@@ -116,3 +117,44 @@ int addConseiller(lConseiller liste_conseiller, Conseiller conseiller)
 	return addConseiller(liste_conseiller->next_conseiller, conseiller);
 
 }
+
+int addCompte(lComptes liste_compte, Compte compte)
+{
+	if (liste_compte == NULL || compte == NULL)
+	{
+		return FAILURE;
+	}
+	if (liste_compte->compte == NULL && compte != NULL)
+	{
+		liste_compte->compte = compte;
+		return SUCCESS;
+	}
+	if (liste_compte->next_compte == NULL && isEqualCompte(liste_compte->compte, compte) != MATCH)
+	{
+		liste_compte->next_compte = init_liste_comptes();
+		liste_compte->next_compte->compte = compte;
+
+		return SUCCESS;
+	}
+	return addcompte(liste_compte->next_compte, compte);
+}
+
+int addClient(lClients liste_client, Client client)
+{
+	if (liste_client == NULL || client == NULL)
+	{
+		return FAILURE;
+	}
+	if (liste_client->client == NULL && client != NULL)
+	{
+		liste_client->client = client;
+		return SUCCESS;
+	}
+	if (liste_client->next_client == NULL && isEqualClient(liste_client->client, client) != MATCH)
+	{
+		liste_client->next_client = init_liste_clients();
+		liste_client->next_client->client = client;
+
+		return SUCCESS;
+	}
+	return addClient(liste_client->next_client, client);

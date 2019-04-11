@@ -27,7 +27,7 @@ typedef struct agence
 	const char *indicatif_agence;
 	const char *domiciliation_agence;
 
-    Compte liste_comptes;
+    lComptes liste_comptes;
 
     lClients liste_clients;
 

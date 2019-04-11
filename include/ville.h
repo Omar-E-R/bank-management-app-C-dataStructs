@@ -18,19 +18,20 @@ typedef struct ville
 {
 	const char *uuid_ville;
 
-	const char *code_postale;
 	const char* nom_ville;
+	
+	const char *code_postale;
 
 	lAgence liste_agences;
 
 } * Ville;
 
-struct data
+typedef struct data
 {
 	Ville ville;
 
 	lData next_ville;
-};
+}*lData;
 
 typedef struct admin
 {
@@ -39,7 +40,19 @@ typedef struct admin
 	Admin next_admin;
 }*Admin;
 
-typedef struct data *lData;
+Ville init_ville();
+lData init_data();
+Admin init_admin();
+Admin new_admin();
+Ville new_ville(const char* nom_ville, const char* code_postale);
+int addAgence(lAgence liste_agence, Agence agence);
+return_type isEqualVille(Ville agence1, Ville agence2);
+return_type isEqualAdmin(Admin admin1, Admin admin2);
+int addVille(lData liste_ville, Ville ville);
+int addAdmin(Admin lAdmin, Admin admin);
+
+
+
 //Pour authentificer les logins, les logins
 Client decrypt_agence(Login user);//uses agence.h/decrypt_client
 

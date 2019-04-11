@@ -17,7 +17,7 @@ Client init_donnees_perso()
 
 	info_client->code_postale = UNINTIALIZED;
 
-	info_client->MouMme = UNINTIALIZED;
+	info_client->sexe = UNINTIALIZED;
 
 	info_client->nom_ville = (const char *)calloc(NOM_VILLE_SIZE, sizeof(char));
 

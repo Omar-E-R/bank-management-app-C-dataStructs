@@ -46,15 +46,15 @@ typedef struct donnees_personnelles
 
     const char *nom;
     const char *prenom;
+    char sexe;
 
     const char* date_de_naissance;
 
     const char *email;
     const char *adresse;
 
-    int code_postale;
-    int MouMme;
 
+    int code_postale;
     const char *nom_ville;
     const char *complement_ad;
     const char *numero_mobile;
@@ -65,9 +65,9 @@ typedef struct donnees_personnelles
 
 typedef struct client{
 
-    int statut;
-
 	const char* uuid_client;
+
+    int statut;
 
     Donnees_Personnelles donnees_perso;
 
