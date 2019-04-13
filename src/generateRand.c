@@ -8,11 +8,11 @@
 #include <time.h>
 #include <ctype.h>
 #include <unistd.h>
-#define EXIT_
+
 #define RAND_MAX_SEARCH 9999999999
-#define SIZE 6
-#define SIZE_FULL 10
-#define SIZE_RAND 2
+#define SIZE 6 //size of random generated numbers
+#define SIZE_FULL 10//size of login id
+#define SIZE_RAND 2//size of random generated int that can be equals
 
 enum boolean
 {

@@ -1,7 +1,7 @@
 #include "client.h"
 
 /* CREATES A NEW CLIENT STRUCT, ALLOCATES DYNAMIC MEMORY FOR IT AND IT INITIALIZE ITS PARAMETERS */ 
-Client init_donnees_perso()
+Donnees_Personnelles init_donnees_perso()
 {
 	Donnees_Personnelles info_client = (Donnees_Personnelles)calloc(1, sizeof(struct donnees_personnelles));
 
@@ -26,6 +26,51 @@ Client init_donnees_perso()
 	info_client->numero_mobile = (const char *)calloc(NUMERO_MOBILE_SIZE, sizeof(char));
 
 	info_client->numero_fixe = (const char *)calloc(NUMERO_FIXE_SIZE, sizeof(char));
+	info_client->carte_identite = (const char *)calloc(CARTE_ID_SIZE, sizeof(char));
+	info_client->date_de_creation = (const char *)calloc(DATE_DE_CREATION_SIZE, sizeof(char));
+
+	return info_client;
+
+}
+Donnees_Personnelles init_donnees_perso_arg(client_size_t alloc_size, char sexe, char *nom, char *prenom, char *date_de_naissance, char *email, char* adresse, int code_postale, char* nom_ville, char* complement_ad, char* numero_mobile, char* numero_fixe, char* carte_id, char* date_de_creation)
+{
+	Donnees_Personnelles info_client = (Donnees_Personnelles)calloc(1, sizeof(struct donnees_personnelles));
+
+	info_client->nom = (const char *)calloc(alloc_size.nom_size, sizeof(char));
+
+	info_client->prenom = (const char *)calloc(alloc_size.prenom_size, sizeof(char));
+
+	info_client->date_de_naissance = (const char *)calloc(alloc_size.date_de_naissance_size, sizeof(char));
+
+	info_client->email = (const char *)calloc(alloc_size.email_size, sizeof(char));
+
+	info_client->adresse = (const char *)calloc(alloc_size.adresse_size, sizeof(char));
+
+	info_client->code_postale = code_postale;
+
+	info_client->sexe = sexe;
+
+	info_client->nom_ville = (const char *)calloc(alloc_size.nom_ville_size, sizeof(char));
+
+	info_client->complement_ad = (const char *)calloc(alloc_size.complement_ad_size, sizeof(char));
+
+	info_client->numero_mobile = (const char *)calloc(alloc_size.numero_mobile_size, sizeof(char));
+
+	info_client->numero_fixe = (const char *)calloc(alloc_size.numero_fixe_size, sizeof(char));
+	info_client->carte_identite = (const char *)calloc(alloc_size.carte_id_size, sizeof(char));
+	info_client->date_de_creation = (const char *)calloc(alloc_size.date_de_creation_size, sizeof(char));
+
+	strcpy(info_client->nom,nom );
+	strcpy(info_client->prenom,prenom );
+	strcpy(info_client->date_de_naissance,date_de_naissance );
+	strcpy(info_client->email,email );
+	strcpy(info_client->adresse,adresse );
+	strcpy(info_client->nom_ville,nom_ville );
+	strcpy(info_client->complement_ad, complement_ad );
+	strcpy(info_client->numero_mobile,numero_mobile );
+	strcpy(info_client->numero_fixe,numero_fixe );
+	strcpy(info_client->carte_identite, carte_id );
+	strcpy(info_client->date_de_creation,date_de_creation );
 
 	return info_client;
 
@@ -37,6 +82,20 @@ Client init_client()
     newClient->uuid_client = (const char *)calloc(UUID_SIZE, sizeof(char));
 
     newClient->statut=UNINTIALIZED;
+
+    return newClient;
+
+}
+Client init_client_arg(char* uuid_client, int statut)
+{
+    Client newClient=(Client)calloc(1,sizeof(struct client));
+    
+    newClient->uuid_client = (const char *)calloc(UUID_SIZE, sizeof(char));
+
+    newClient->statut=statut;
+
+	strcpy(newClient, uuid_client);
+	
 
     return newClient;
 

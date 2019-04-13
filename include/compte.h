@@ -6,17 +6,22 @@
 #include "generateRand.h"
 
 #define BANK_NUMBER 40305
-
+typedef struct rib_size
+{
+	 size_t iban_size, code_bic_size, numero_compte_size, indicatif_agence_size, domiciliation_size;
+}rib_size_t;
 typedef enum
 {
 	UNINTIALIZED,
     JOINT,
-    NONJOINT,
+    INDIVIDUEL,
     ACTIVE,
     DESACTIVE,
     ENATTENTE,
-    LIVRETA,
-    DEPOT,
+    LIVRET_A,
+	LDD,
+	LIVRET_JEUNE,
+    COURANT,
     PEL
 
 } type_compte;
@@ -41,7 +46,7 @@ typedef enum
     INDICATIF_AGENCE,
     DOMICILIATION,
     STATUT,
-    JOINT_OU_NONJOINT,
+    JOINT_OU_INDIVIDUEL,
     TYPE,
     RIB,
     SOLDE,
@@ -49,12 +54,13 @@ typedef enum
 } type_element;
 typedef enum allocation_size_element
 {
-    IBAN_SIZE=28,
-    CODE_BIC_SIZE=9,
-    NUMERO_COMPTE_SIZE=12,
-    INDICATIF_AGENCE_SIZE=6,
+    IBAN_SIZE=27,
+    CODE_BIC_SIZE=8,
+    NUMERO_COMPTE_SIZE=11,
+    INDICATIF_AGENCE_SIZE=5,
     DOMICILIATION_SIZE=35,
-    UUID_SIZE=37
+    UUID_SIZE=36,
+    OPERATIONS_SIZE=36
 } allocation_size_element;
 
 typedef union client_s {
@@ -80,10 +86,6 @@ typedef struct compte
 {
     const char* uuid_compte;
 
-    Rib rib;
-
-    Client_s titulaire;
-
     type_compte statut; //compte supprime ? i.e actif ou non actif
     type_compte nature_compte;
     type_compte type_compte;//LIVRET...
@@ -91,13 +93,20 @@ typedef struct compte
     double solde;
 
     const char *operations;//A FILENAME OR MAYBE I WILL CHANGE IT TO A FILE POINTER
+	
+    Rib rib;
+
+    Client_s titulaire;
+
+
 
     Compte next_compte;
 
 
 } *Compte;
+Rib init_rib_arg(rib_size_t alloc_size, char* iban, char* code_bic, char* numero_compte, int indicatif_agence, char* domiciliation);
 
-
+Compte init_compte_arg(char* uuid_compte,int statut, int nature_compte, int type_compte, double solde, char* operations);
 
 Compte Compte_Courant;
 

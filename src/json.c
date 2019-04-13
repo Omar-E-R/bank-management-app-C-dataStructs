@@ -1,17 +1,5 @@
 #include"json.h"
 
-/*
- * Copyright (c) 2009-2016 Petri Lehtinen <petri@digip.org>
- *
- * Jansson is free software; you can redistribute it and/or modify
- * it under the terms of the MIT license. See LICENSE for details.
- */
-
-#include <stdlib.h>
-#include <string.h>
-
-#include <jansson.h>
-
 #define BUFFER_SIZE (256 * 1024) /* 256 KB */
 
 #define URL_FORMAT "./database/%s/%s/"
@@ -93,13 +81,35 @@ static char *request(const char *url)
 }
 int parse_code_postale(json_t* code_postale)
 {
-	/* code here */
-
-	return SUCCESS;
+	if(!json_is_number(code_postale))
+	{
+		fprintf(stderr, "parsing syntax error: code postale can only be a integer\n");
+		return FAILURE;
+	}
+	else
+	{
+		double valeur;
+		if((valeur=json_number_value(code_postale))>=99000 || valeur <= 0 )
+		{
+			fprintf(stderr, "parsing syntax error: code postale has an invalid value \n");
+			return FAILURE;
+		}
+		else 
+			return SUCCESS;
+	}
+	
 }
 int parse_nom_ville(json_t* nom_ville)
 {
-	/* code here */
+	if(!json_is_string(nom_ville))
+	{
+		fprintf(stderr, "parsing syntax error: nom_ville can only be a string\n");
+		return FAILURE;
+	}else
+	{
+		if(json_string_value(nom_ville))
+	}
+	
 
 	return SUCCESS;
 }
@@ -566,7 +576,7 @@ int parse_ville_data(const char* url, Ville ville)
 	return SUCCESS;
 }
 
-int parse_agence_data(const char* url, Agence agence)
+int parse_agence_data(const char* url, Agence agence,Client client)
 {
 	size_t i;
 	char *text;

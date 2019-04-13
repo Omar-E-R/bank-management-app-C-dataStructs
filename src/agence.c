@@ -6,6 +6,7 @@ lComptes init_liste_comptes()
 {
 	lComptes liste_comptes = (lComptes)calloc(1, sizeof(struct liste_compte));
 
+	liste_comptes->compte=NULL;
 	liste_comptes->next_compte=NULL;
 
 	return liste_comptes; 
@@ -16,6 +17,7 @@ lClients init_liste_clients()
 {
 	lClients liste_clients = (lClients)calloc(1, sizeof(struct liste_clients));
 
+	liste_clients->client=NULL;
 	liste_clients->next_client=NULL;
 
 	return liste_clients; 
@@ -28,6 +30,19 @@ Conseiller init_conseiller()
 	int privilege_manager;
 	conseiller->uuid_conseiller = (const char *)calloc(UUID_SIZE, sizeof(char));
 
+	return conseiller; 
+
+}
+Conseiller init_conseiller_arg(char* uuid_conseiller, int statut)
+{
+	Conseiller conseiller=(Conseiller)calloc(1, sizeof(struct conseiller));
+	
+	conseiller->uuid_conseiller = (const char *)calloc(UUID_SIZE, sizeof(char));
+
+	strcpy(conseiller->uuid_conseiller, uuid_conseiller);
+
+	conseiller->statut= statut;
+	
 	return conseiller; 
 
 }
@@ -55,6 +70,26 @@ Agence init_agence()
 	agence->indicatif_agence = (const char *)calloc(INDICATIF_AGENCE_SIZE, sizeof(char));
 	agence->domiciliation_agence = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
 
+	return agence; 
+
+}
+
+Agence init_agence_arg(agence_size_t allocation_size,char *uuid_agence, char *code_bic, int indicatif_agence, char *domiciliation_agence, char *hash_code)
+{
+	Agence agence=(Agence)calloc(1, sizeof(struct agence));
+
+
+	agence->uuid_agence = (const char*)calloc(allocation_size.uuid_agence, sizeof(char));
+	agence->code_bic=(const char *) calloc(allocation_size.code_bic, sizeof(char));
+	agence->indicatif_agence = (const char *)calloc(allocation_size.indicatif_agence, sizeof(char));
+	agence->domiciliation_agence = (const char *)calloc(allocation_size.domiciliation_agence, sizeof(char));
+
+	strcpy(agence->uuid_agence, uuid_agence);
+	strcpy(agence->code_bic, code_bic);
+	strcpy(agence->domiciliation_agence, domiciliation_agence);
+	strcpy(agence->hash_code, hash_code);
+	sprintf(agence->indicatif_agence, "%05d", indicatif_agence);
+	
 	return agence; 
 
 }
@@ -95,7 +130,7 @@ return_type isEqualConseiller(Conseiller employe1, Conseiller employe2)
 
 return_type isEqualAgence(Agence agence1, Agence agence2)
 {
-	if(strcmp(agence1->uuid_agence, agence2->uuid_agence))
+	if (strcmp(agence1->uuid_agence, agence2->uuid_agence) == 0 || strcmp(agence1->code_bic, agence2->code_bic) == 0 || strcmp(agence1->domiciliation_agence, agence2->domiciliation_agence) == 0 || strcmp(agence1->hash_code, agence2->hash_code)==0 || strcmp(agence1->indicatif_agence, agence2->indicatif_agence)==0)
 		return MATCH;
 	return NO_MATCH; 
 }
@@ -141,20 +176,26 @@ int addCompte(lComptes liste_compte, Compte compte)
 
 int addClient(lClients liste_client, Client client)
 {
-	if (liste_client == NULL || client == NULL)
-	{
-		return FAILURE;
-	}
-	if (liste_client->client == NULL && client != NULL)
-	{
-		liste_client->client = client;
-		return SUCCESS;
-	}
-	if (liste_client->next_client == NULL && isEqualClient(liste_client->client, client) != MATCH)
-	{
-		liste_client->next_client = init_liste_clients();
-		liste_client->next_client->client = client;
+	lClients var = liste_client;
 
-		return SUCCESS;
+	while (var != NULL)
+	{
+		if (var->client != NULL)
+		{
+			if (isEqualClient((var->client), client) == MATCH)
+			{
+				return EXIT_FAILURE;
+			}
+		}
+		else
+		{
+			var->client = client;
+			return EXIT_SUCCESS;
+		}
+		if (var->next_client == NULL)
+		{
+			var->next_client = init_client();
+		}
+		var = var->next_client;
 	}
-	return addClient(liste_client->next_client, client);
+	return EXIT_SUCCESS;

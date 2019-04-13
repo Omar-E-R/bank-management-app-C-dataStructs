@@ -9,16 +9,41 @@ permet de decrypter les donnees des agences
 
 */
 
+Ville init_ville_arg(ville_size_t allocation_size,char* uuid_ville,int code_postale,char* nom_ville,char* hash_code)
+{
+	Ville ville = (Ville)calloc(1, sizeof(struct ville));
+
+	ville->uuid_ville = (const char *)calloc(allocation_size.uuid_ville, sizeof(char));
+
+	ville->code_postale = (const char *)calloc(CODE_POSTALE_SIZE, sizeof(char));
+
+	ville->nom_ville = (const char *)calloc(allocation_size.nom_ville, sizeof(char));
+
+	ville->hash_code = (const char *)calloc(allocation_size.hash_code, sizeof(char));
+
+	strcpy(ville->uuid_ville, uuid_ville);
+	strcpy(ville->nom_ville, nom_ville);
+	strcpy(ville->hash_code, hash_code);
+
+	sprintf(ville->code_postale, "%05d", code_postale);
+
+	return ville;
+}
+
+
 Ville init_ville()
 {
 	Ville ville = (Ville)calloc(1, sizeof(struct ville));
 
 	ville->uuid_ville = (const char *)calloc(UUID_SIZE, sizeof(char));
-	ville->code_postale = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
-	ville->nom_ville = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
+	ville->code_postale = (const char *)calloc(CODE_POSTALE_SIZE, sizeof(char));
+	ville->nom_ville = (const char *)calloc(NOM_VILLE_SIZE, sizeof(char));
+	ville->hash_code = (const char *)calloc(HASH_CODE_SIZE, sizeof(char));
 
 	return ville;
 }
+
+
 
 lData init_data()
 {
@@ -47,7 +72,14 @@ Admin new_admin()
 
 	return admin;
 }
+lAgence init_liste_agence()
+{
+	lAgence liste_agence=(lAgence)calloc(1, sizeof(struct liste_agence));
 
+	return liste_agence;
+
+
+}
 Ville new_ville(const char* nom_ville, const char* code_postale)
 {
 	Ville ville = init_ville();
@@ -62,27 +94,35 @@ Ville new_ville(const char* nom_ville, const char* code_postale)
 
 int addAgence(lAgence liste_agence, Agence agence)
 {
-	if (liste_agence == NULL || agence == NULL)
-	{
-		return FAILURE;
-	}
-	if(liste_agence->agence==NULL && agence!=NULL)
-	{
-		liste_agence->agence=agence;
-	}
-	if (liste_agence->next_agence == NULL && isEqualAgence(liste_agence->agence, agence) != MATCH)
-	{
-		liste_agence->next_agence=init_liste_agence();
-		liste_agence->next_agence->agence = agence;
+	lAgence var = liste_agence;
 
-		return SUCCESS;
+	while (var!=NULL)
+	{
+		if(var->agence!=NULL)
+		{
+			if (isEqualAgence((var->agence), agence)==MATCH)
+			{
+				return EXIT_FAILURE;
+			}
+			
+		}else
+		{
+			var->agence=agence;
+			return EXIT_SUCCESS;
+		}
+		if(var->next_agence==NULL)
+		{
+			var->next_agence= init_agence();
+		}
+		var=var->next_agence;
+	
 	}
-	return addAgence(liste_agence->next_agence, agence);
+	return EXIT_SUCCESS;
 }
 
-return_type isEqualVille(Ville agence1, Ville agence2)
+return_type isEqualVille(Ville ville1, Ville ville2)
 {
-	if (strcmp(agence1->uuid_ville, agence2->uuid_ville))
+	if (strcmp(ville1->uuid_ville, ville2->uuid_ville) == 0 && strcmp(ville1->code_postale, ville2->code_postale) == 0 && strcmp(ville1->nom_ville, ville2->nom_ville) == 0 && strcmp(ville1->hash_code, ville2->hash_code) == 0)
 		return MATCH;
 	return NO_MATCH;
 }

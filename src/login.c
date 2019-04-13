@@ -60,6 +60,18 @@ Login init_login()
 
 	return login;
 }
+Login init_login_arg(login_size_t alloc_size, char* id, char* key)
+{
+	Login login=(const char*)calloc(1,sizeof(struct login));
+	
+	login->login_id=(const char*)calloc(alloc_size.id,sizeof(char));
+	login->key=(const char *) calloc(alloc_size.key, sizeof(char));
+
+	strcpy(login->login_id, id);
+	strcpy(login->key, key);
+
+	return login;
+}
 Login init_login_admin()
 {
 	Login_Admin login_admin = (const char *)calloc(1, sizeof(struct login_admin));

@@ -69,7 +69,7 @@ Compte getCompte(Compte comptes, type_compte type)
         return NULL;
 
     if (comptes->type_compte == type
-     || comptes->joint_ou_nonjoint == type || comptes->statut == type)
+     || comptes->nature_compte == type || comptes->statut == type)
     {
         return comptes;
     }
@@ -114,7 +114,7 @@ return_type compareComptes(Compte c1, Compte c2,  type_element element)
                 return MATCH;
             break;
 
-        case JOINT_OU_NONJOINT :
+        case JOINT_OU_INDIVIDUEL :
             if (c1->statut == c2->statut)
                 return MATCH;
             break;
@@ -169,7 +169,7 @@ int addCompte(Compte c, Compte newC)
     if (c==NULL || newC==NULL)
         return EMPTY_STACK;
     
-    switch (newC->joint_ou_nonjoint)
+    switch (newC->nature_compte)
     {
         case JOINT:
             if (getCompte(c, JOINT)==NULL && containsCompte(c,newC)== NULL)
@@ -179,10 +179,10 @@ int addCompte(Compte c, Compte newC)
             }
             break;  
             
-        case NONJOINT:
+        case INDIVIDUEL:
             if(containsCompte(c,newC)== NULL)
             {
-				newC->next_compte = c; //adding the new account(Nonjoint) to the begining of the stack
+				newC->next_compte = c; //adding the new account(INDIVIDUEL) to the begining of the stack
 				return SUCCESS;
             }
 			break;
@@ -202,7 +202,7 @@ int addCompteJoint(Compte c1, Compte c2, Compte cJoint)
     if ( c1 == NULL ||  c2 == NULL)
         return EMPTY_STACK;
     
-    switch (cJoint->joint_ou_nonjoint)
+    switch (cJoint->nature_compte)
     {        
         case JOINT:
             if(addCompte(c1, cJoint)==SUCCESS)
@@ -221,7 +221,7 @@ int addCompteJoint(Compte c1, Compte c2, Compte cJoint)
 			return FAILURE;
 			
 
-        default://NONJOINT
+        default://INDIVIDUEL
             return ERROR;
     }
     
@@ -236,7 +236,7 @@ Compte init_compte()
 
 	/* TYPE COMPTE */
     newCompte->statut = UNINTIALIZED;
-    newCompte->joint_ou_nonjoint = UNINTIALIZED;
+    newCompte->nature_compte = UNINTIALIZED;
     newCompte->type_compte = UNINTIALIZED;
 	/*-----------*/
 
@@ -244,6 +244,33 @@ Compte init_compte()
 	newCompte->solde = UNINTIALIZED;
 
 	newCompte->uuid_compte = (const char *)calloc(UUID_SIZE, sizeof(char));
+
+	newCompte->next_compte=NULL;
+
+
+	return newCompte;
+}
+
+
+Compte init_compte_arg(char* uuid_compte,int statut, int nature_compte, int type_compte, double solde, char* operations)
+{
+    Compte newCompte = (Compte)calloc( 1, sizeof(struct compte) );
+
+	newCompte->uuid_compte = (const char *)calloc(UUID_SIZE, sizeof(char));
+	newCompte->operations = (const char *)calloc(strlen(operations)+1, sizeof(char));
+	
+	strcpy(newCompte->uuid_compte, uuid_compte);	
+	strcpy(newCompte->operations, operations);	
+
+	/* TYPE COMPTE */
+    newCompte->statut = statut;
+    newCompte->nature_compte = nature_compte;
+    newCompte->type_compte = type_compte;
+	/*-----------*/
+
+	
+	newCompte->solde = solde;
+
 
 	newCompte->next_compte=NULL;
 
