@@ -100,11 +100,11 @@ int addAgence(lAgence liste_agence, Agence agence)
 	{
 		if(var->agence!=NULL)
 		{
-			if (isEqualAgence((var->agence), agence)==MATCH)
+			if (isEqualAgence((var->agence), agence)==EXIT_SUCCESS)
 			{
 				return EXIT_FAILURE;
 			}
-			
+
 		}else
 		{
 			var->agence=agence;
@@ -115,41 +115,41 @@ int addAgence(lAgence liste_agence, Agence agence)
 			var->next_agence= init_agence();
 		}
 		var=var->next_agence;
-	
+
 	}
 	return EXIT_SUCCESS;
 }
 
-return_type isEqualVille(Ville ville1, Ville ville2)
+int isEqualVille(Ville ville1, Ville ville2)
 {
 	if (strcmp(ville1->uuid_ville, ville2->uuid_ville) == 0 && strcmp(ville1->code_postale, ville2->code_postale) == 0 && strcmp(ville1->nom_ville, ville2->nom_ville) == 0 && strcmp(ville1->hash_code, ville2->hash_code) == 0)
-		return MATCH;
-	return NO_MATCH;
+		return EXIT_SUCCESS;
+	return EXIT_FAILURE;
 }
-return_type isEqualAdmin(Admin admin1, Admin admin2)
+int isEqualAdmin(Admin admin1, Admin admin2)
 {
 	if (strcmp(admin1->uuid_admin, admin2->uuid_admin))
-		return MATCH;
-	return NO_MATCH;
+		return EXIT_SUCCESS;
+	return EXIT_FAILURE;
 }
 
 int addVille(lData liste_ville, Ville ville)
 {
 	if (liste_ville == NULL || ville == NULL)
 	{
-		return FAILURE;
+		return EXIT_FAILURE;
 	}
 	if (liste_ville->ville== NULL && ville != NULL)
 	{
 		liste_ville->ville=ville;
-		return SUCCESS;
+		return EXIT_SUCCESS;
 	}
-	if (liste_ville->next_ville == NULL && isEqualVille(liste_ville->ville, ville) != MATCH)
+	if (liste_ville->next_ville == NULL && isEqualVille(liste_ville->ville, ville) != EXIT_SUCCESS)
 	{
 		liste_ville->next_ville=init_data();
 		liste_ville->next_ville->ville = ville;
 
-		return SUCCESS;
+		return EXIT_SUCCESS;
 	}
 	return addVille(liste_ville->next_ville, ville);
 }
@@ -157,19 +157,19 @@ int addAdmin(Admin lAdmin, Admin admin)
 {
 	if (lAdmin == NULL || admin == NULL)
 	{
-		return FAILURE;
+		return EXIT_FAILURE;
 	}
-	if (lAdmin->next_admin == NULL && isEqualAdmin(lAdmin, admin) != MATCH)
+	if (lAdmin->next_admin == NULL && isEqualAdmin(lAdmin, admin) != EXIT_SUCCESS)
 	{
 		lAdmin->next_admin = admin;
 
-		return SUCCESS;
+		return EXIT_SUCCESS;
 	}
 	return addAdmin(lAdmin->next_admin, admin);
 }
 
 Ville decrypt_agence(Login user)
 {
-    
+
 
 }

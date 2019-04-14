@@ -7,10 +7,10 @@
 Client identifier;
 
 /*
-implementation des fonctions de identifications 
-qui utilisent la struct de ville pour decrypter le ID 
+implementation des fonctions de identifications
+qui utilisent la struct de ville pour decrypter le ID
 ce qui permet de trouver le code de l'agence
-et donc trouver apres le compte du client et valider si le key prive correspond
+et donc trouver apres le compte du client et valider si le login_key prive correspond
 
 */
 
@@ -43,9 +43,9 @@ et donc trouver apres le compte du client et valider si le key prive correspond
 
 //     const char* encrypted_pass= scan_client_password();
 
-    
 
-//     login->key=encrypted_pass;
+
+//     login->login_key=encrypted_pass;
 
 //     login->login_id=username-ENCRYPTION_KEY;
 
@@ -56,26 +56,26 @@ Login init_login()
 {
 	Login login=(const char*)calloc(1,sizeof(struct login));
 	login->login_id=(const char*)calloc(LOGIN_ID_SIZE,sizeof(char));
-	login->key=(const char *) calloc(LOGIN_ID_SIZE, sizeof(char));
+	login->login_key=(const char *) calloc(LOGIN_ID_SIZE, sizeof(char));
 
 	return login;
 }
 Login init_login_arg(login_size_t alloc_size, char* id, char* key)
 {
 	Login login=(const char*)calloc(1,sizeof(struct login));
-	
+
 	login->login_id=(const char*)calloc(alloc_size.id,sizeof(char));
-	login->key=(const char *) calloc(alloc_size.key, sizeof(char));
+	login->login_key=(const char *) calloc(alloc_size.key, sizeof(char));
 
 	strcpy(login->login_id, id);
-	strcpy(login->key, key);
+	strcpy(login->login_key, key);
 
 	return login;
 }
 Login init_login_admin()
 {
 	Login_Admin login_admin = (const char *)calloc(1, sizeof(struct login_admin));
-	
+
 	login_admin->login_id = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
 	login_admin->pin = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
 	login_admin->code_agence = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
@@ -97,7 +97,7 @@ int encrypt_login_pass(Login user)
     if (getentropy(randbytes, sizeof randbytes))
     {
         perror("getentropy");
-        return ERROR;
+        return EXIT_FAILURE;
     }
 
     /* Use them to fill in the salt string. */
@@ -109,24 +109,24 @@ int encrypt_login_pass(Login user)
         salt[3 + i] = saltchars[randbytes[i] & 0x3f];
     salt[3 + i] = '\0';
 
-    /* Read in the user’s passphrase and hash it. */
-    hash = crypt(user->key, salt);
+    /* Read in the userâ€™s passphrase and hash it. */
+    hash = crypt(user->login_key, salt);
     if (!hash || hash[0] == '*')
     {
         perror("crypt");
-        return ERROR;
+        return EXIT_FAILURE;
     }
 
     /* modify the login struct. */
 
-    strcpy(user->key, hash);
+    strcpy(user->login_key, hash);
 
     /* clearing the memory used to store the password */
 
     memset(&hash[0], 0, sizeof(hash));
 
 
-    return SUCCESS;
+    return EXIT_SUCCESS;
 }
 const char* decrypt_login_id(Login user){
 
@@ -137,7 +137,7 @@ const char* decrypt_login_id(Login user){
 
 int decrypt_login_pass(Login user)
 {
-    char key[64];
+    char login_key[64];
     char orig[9] = "eggplant";
     char buf[64];
     char txt[9];
@@ -145,7 +145,7 @@ int decrypt_login_pass(Login user)
 
     for (i = 0; i < 64; i++)
     {
-        key[i] = rand() & 1;
+        login_key[i] = rand() & 1;
     }
 
     for (i = 0; i < 8; i++)
@@ -154,7 +154,7 @@ int decrypt_login_pass(Login user)
         {
             buf[i * 8 + j] = orig[i] >> j & 1;
         }
-        setkey(key);
+        setkey(login_key);
     }
     printf("Before encrypting: %s\n", orig);
 

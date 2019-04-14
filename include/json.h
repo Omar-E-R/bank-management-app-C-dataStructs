@@ -1,35 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <jansson.h>
-#include "ville.h"
-#include "agence.h"
-#include "compte.h"
-#include "client.h"
+#include"ville.h"
 
 
-#define ERROR_MESSAGE "message"
-
-enum errors{
-	SUCCESS,
-	FAILURE
-};
-
-#ifndef UTIL_H
-#define UTIL_H
-
-#ifdef HAVE_CONFIG_H
-#include <jansson_private_config.h>
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#if HAVE_LOCALE_H
-#include <locale.h>
-#endif
-
-#include <jansson.h>
 
 #define failhdr fprintf(stderr, "%s:%d: ", __FILE__, __LINE__)
 
@@ -101,20 +76,3 @@ enum errors{
 			exit(1);                                                                \
 		}                                                                           \
 	} while (0)
-
-/* Assumes json_error_t error */
-#define check_error(code_, text_, source_, line_, column_, position_) \
-	check_errors(code_, &text_, 1, source_, line_, column_, position_)
-
-static void run_tests();
-
-int main()
-{
-#ifdef HAVE_SETLOCALE
-	setlocale(LC_ALL, "");
-#endif
-	run_tests();
-	return 0;
-}
-
-#endif

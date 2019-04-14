@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include<jansson.h>
-#include"ville.h"
+#include<json.h>
+
 
 
 static void *secure_malloc(size_t size)
@@ -24,6 +21,29 @@ static void secure_free(void *ptr)
 	free(ptr);
 }
 
+static int json_dump_data_file(json_t* root, const char* file_uuid)
+{
+	json_error_t error;
+	char *path = malloc((strlen(WORKSPACE) + strlen(DATABASE) + strlen(file_uuid) + 5 + 1) * sizeof(char));
+
+	strcpy(path,WORKSPACE);
+	strcat(path,DATABASE);
+	strcat(path,file_uuid);
+	strcat(path,".json");
+
+	int res=json_dump_file(root, path, &error);
+	if (res=-1)
+	{
+		fprintf(stderr, "error: in file:%s on line %d: %s\n", error.source, error.line, error.text);
+
+		fail("json_dump_file returned an invalid error");
+
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+
+
+}
 static json_t* json_load_data_file(const char* file_uuid)
 {
 	json_t *json;
@@ -40,19 +60,14 @@ static json_t* json_load_data_file(const char* file_uuid)
 	if (!json)
 	{
 		fprintf(stderr, "error: in file:%s on line %d: %s\n", error.source, error.line, error.text);
-		if (strcmp(error.text, "unable to open /path/to/nonexistent/file.json") != 0
-			&& json_error_code(&error) != json_error_cannot_open_file)
-			fail("json_load_file returned an invalid error");
-		else
-		{
-			fail("json_load_file cannot open file");
-		}
+		fail("json_load_file returned an invalid error");
+
 		return NULL;
 	}
 
 	return json;
 
-	
+
 }
 
 Rib parse_rib_struct(json_t *rib_object, size_t flags)
@@ -76,7 +91,7 @@ Rib parse_rib_struct(json_t *rib_object, size_t flags)
 	alloc_size.numero_compte_size=numero_compte_size;
 	alloc_size.code_bic_size=code_bic_size;
 	alloc_size.domiciliation_size=domiciliation_size;
-	
+
 
 	return init_rib_arg(alloc_size, iban, code_bic, numero_compte, indicatif_agence, domiciliation);
 
@@ -99,16 +114,16 @@ char* parse_operations_csv(json_t *operations_object)
 	strcat(path, DATABASE);
 	strcat(path, uuid_operations);
 	strcat(path, ".csv");
-	
+
 	FILE* fp=fopen(path,"w");
 	json_t *op_array=json_object_get(operations_object, "operations");
 	json_t *value;
-	
+
 	size_t index;
 	char* date_operation, libelle, detail, montant, devise;
-	
+
 	fputs("Date de l'operation;Libelle;Detail de l'ecriture;Montant de l'operation;Devise", fp);
-	
+
 	json_array_foreach(op_array, index, value)
 	{
 		if(json_unpack(value, "{s:s, s:s, s:s, s:s, s:s !}", "date_operation", &date_operation, "libelle", &libelle, "detail", &detail, "montant", &montant, "devise", &devise))
@@ -159,7 +174,7 @@ Donnees_Personnelles parse_donnees_perso_struct(json_t *donnees_object, size_t f
 
 	char* nom, prenom, sexe, date_de_naissance, email, adresse, nom_ville, complement_ad, numero_mobile, numero_fixe, carte_id, date_de_creation;
 	int code_postale, res, nom_size, prenom_size, sexe_size, date_de_naissance_size, email_size, adresse_size, nom_ville_size, complement_ad_size, numero_mobile_size, numero_fixe_size, carte_id_size, date_de_creation_size;
-	
+
 
 	res = json_unpack_ex(donnees_object, &error, flags, "{s:s%, s:s%,  s:s%, s:s%, s:s%, s:s%, s:s%, s:i, s:s%, s:s%, s?s%, s:s%, s:s%}", "nom", &nom, &nom_size,"prenom", &prenom, &prenom_size,"sexe", &sexe, &sexe_size,"date_de_naissance", &date_de_naissance, &date_de_naissance,"email", &email, &email_size,"adresse", &adresse, &adresse_size,"complement_adresse", &complement_ad, &complement_ad_size,"nom_ville", &nom_ville, &nom_ville_size, "code_postale", &code_postale, "numero_mobile", &numero_mobile, &numero_mobile_size,"numero_fixe", &numero_fixe, &numero_fixe_size, "carte_id", &carte_id, &carte_id_size,"date_de_creation", &date_de_creation, &date_de_creation_size );
 
@@ -184,7 +199,7 @@ Donnees_Personnelles parse_donnees_perso_struct(json_t *donnees_object, size_t f
 	alloc_size.numero_fixe_size = numero_fixe_size ;
 	alloc_size.numero_mobile_size = numero_mobile_size ;
 	alloc_size.prenom_size = prenom_size  ;
-	
+
 	return init_donnees_perso_arg(alloc_size, sexe, nom, prenom, date_de_naissance, email, adresse, code_postale, nom_ville, complement_ad, numero_mobile, numero_fixe, carte_id, date_de_creation);
 }
 
@@ -205,7 +220,7 @@ Login parse_login_struct(json_t *login_object)
 		fail("json_unpack object Login: Wrong type, format or incompatible JSON value encountered");
 		check_error(json_error_wrong_type, "Wrong type, format of Login struct", "<validation>", error.line, error.column, error.position);
 		json_decref(login_object);
-		
+
 		return NULL;
 	}
 	login_size_t alloc_size;
@@ -239,9 +254,9 @@ Client parse_client_struct(json_t *client_object, size_t flags)
 Conseiller parse_conseiller_struct(json_t *conseiller_object, size_t flags)
 {
 	json_error_t error;
-	
+
 	char* uuid_conseiller;
-	
+
 	int res, statut, uuid_conseiller_size;
 
 	res=json_unpack_ex(conseiller_object, &error, flags, "{s:s%, s:i}", "uuid_conseiller", &uuid_conseiller, &uuid_conseiller_size, "statut", &statut);
@@ -296,15 +311,15 @@ Ville parse_ville_struct(json_t *ville_object)
 	char *uuid, *nom_ville, *hash_code;
 
 	int res;
-	
+
 	res = json_unpack_ex(ville_object, &error, 0, "{s:s%, s:i, s:s%, s:s%}", "uuid_compte", &uuid, &uuid_size, "code_postale", &code_postale, "nom_ville", &nom_ville, &nom_ville_size, "hash_code", &hash_code, &hash_code_size);
-	
+
 	if (res || uuid_size > UUID_SIZE || nom_ville_size > NOM_VILLE_SIZE || hash_code_size > hash_code_size)
 	{
 		fail("json_unpack object Ville: Expected a JSON string value or JSON string value exceeded length expected");
 		check_error(json_error_wrong_type, "Wrong type, format of lData->ville is {s:s, s:i, s:s, s:s}", "<validation>", error.line, error.column, error.position);
 		json_decref(ville_object);
-		
+
 		return NULL;
 	}
 	ville_size_t alloc_size;
@@ -340,7 +355,7 @@ int parse_valid_basic_data(const char* basic_data_filename, lData basic_data)
 	{
 
 		if ((ville=parse_ville_struct(value))==NULL || !addVille(basic_data,ville))
-		{	
+		{
 			json_decref(root);
 			fprintf(stderr, "error adding data to lData struct: a possible error is that uuid_ville element has a duplicate\n");
 			return EXIT_FAILURE;
@@ -352,36 +367,29 @@ int parse_valid_basic_data(const char* basic_data_filename, lData basic_data)
 
 
 
-json_t** login_id_parsing(const char* uuid_ville, const char* uuid_agence, Client client, Conseiller conseiller)
+json_t** login_id_parsing(const char* path, Agence agence, Client client, Conseiller conseiller)
 {
 	Login login;
 
-	if(uuid_ville==NULL || uuid_agence==NULL || (client == NULL && conseiller == NULL))
+	if(path==NULL || (client == NULL && conseiller == NULL))
 	{
 		fail("parsing data for the login process(0) failed: Passing NULL or INVALID  pointers");
-		
+
 		return NULL;
 	}else
 	{
 		if(client!=NULL)
 		{
-			login=client->user_login;
+			login=client->client_login;
 		}else
 		{
 			login=conseiller->login_conseiller;
-			
+
 		}
-		
-		assert(login != NULL && login->login_id != NULL && login->key != NULL);
+
+		assert(login != NULL && login->login_id != NULL && login->login_key != NULL);
 	}
-	
 
-	const char *path = malloc((strlen(uuid_ville)+1+strlen(uuid_agence)+1)*sizeof(char));
-
-	strcpy(path, uuid_ville);
-	strcat(path, "/");
-	strcat(path, uuid_agence);
-	
 	json_t *root_ag=json_load_data_file(path);
 
 
@@ -400,13 +408,13 @@ json_t** login_id_parsing(const char* uuid_ville, const char* uuid_agence, Clien
 		return NULL;
 	}
 
-	if(strcmp(uuid_agence_verify, uuid_agence)!=0)
+	if(strcmp(uuid_agence_verify,agence->uuid_agence)!=0)
 	{
 		fail("ERROR-POSSIBLE DATA CONFUSION: JSON data values does NOT corresponds to its file");
 		json_decref(root_ag);
 		return NULL;
 	}
-	
+
 	json_set_alloc_funcs(secure_malloc, secure_free);
 
 	int boolean=(client!=NULL && conseiller==NULL);
@@ -416,25 +424,25 @@ json_t** login_id_parsing(const char* uuid_ville, const char* uuid_agence, Clien
 	{
 		case 1:
 		{
-			json_t *clients_array = json_object_get(root_ag, "liste_clients");
-			if (!json_is_array(clients_array))
+			json_t *client_array = json_object_get(root_ag, "liste_client");
+			if (!json_is_array(client_array))
 			{
 				fail("parsing data for the login process(3.1) failed: wrong JSON data type or format");
 				json_decref(root_ag);
 				return NULL;
 			}
 
-			json_t *client_js, *login_js = json_pack("{s:s, s:s}", "login_id", login->login_id, "login_key", login->key);
+			json_t *client_js, *login_js = json_pack("{s:s, s:s}", "login_id", login->login_id, "login_key", login->login_key);
 			size_t index;
 
-			json_array_foreach(clients_array, index, client_js)
+			json_array_foreach(client_array, index, client_js)
 			{
 				if (json_equal(json_object_get(json_object_get(client_js, "login_client"),"login_id"), json_object_get(login_js, "login_id")))
 				{
 					fputs("login client ID was found", stdout);
 					// json_decref(login_js);
 					// json_decref(client_js);
-					// json_decref(clients_array);
+					// json_decref(client_array);
 					// json_decref(root_ag);
 					results[0]=root_ag;
 					results[1]=client_js;
@@ -444,7 +452,7 @@ json_t** login_id_parsing(const char* uuid_ville, const char* uuid_agence, Clien
 			}
 			// json_decref(login_js);
 			// json_decref(client_js);
-			// json_decref(clients_array);
+			// json_decref(client_array);
 			// json_decref(root_ag);
 
 			fputs("login client ID was not found", stdout);
@@ -458,7 +466,7 @@ json_t** login_id_parsing(const char* uuid_ville, const char* uuid_agence, Clien
 		{
 			assert(client==NULL && conseiller!=NULL);
 
-			json_t *conseillers_array = json_object_get(root_ag, "liste_conseillers");
+			json_t *conseillers_array = json_object_get(root_ag, "liste_conseiller");
 			if (!json_is_array(conseillers_array))
 			{
 				fail("parsing data for the login process(3.2) failed: wrong JSON data type or format");
@@ -466,7 +474,7 @@ json_t** login_id_parsing(const char* uuid_ville, const char* uuid_agence, Clien
 				return NULL;
 			}
 
-			json_t *conseiller_js, *login_js = json_pack("{s:s, s:s}", "login_id", login->login_id, "login_key", login->key);
+			json_t *conseiller_js, *login_js = json_pack("{s:s, s:s}", "login_id", login->login_id, "login_key", login->login_key);
 			size_t index;
 
 			json_array_foreach(conseillers_array, index, conseiller_js)
@@ -510,7 +518,7 @@ json_t** login_id_parsing(const char* uuid_ville, const char* uuid_agence, Clien
 int parse_ville_data(Ville ville)
 {
 	json_error_t error;
-	
+
 	json_t *ville_object, *agence_array, *agence_object;
 
 	ville_object=json_load_data_file(ville->uuid_ville);
@@ -542,20 +550,20 @@ int parse_ville_data(Ville ville)
 	ville->liste_agences= init_liste_agence();
 
 	lAgence liste_agence=ville->liste_agences;
-	
+
 	Agence agence;
-	
+
 	json_array_foreach(agence_array, index, agence_object)
 	{
-		agence=parse_agence_struct(agence_object, JSON_STRICT); 
-		
+		agence=parse_agence_struct(agence_object, JSON_STRICT);
+
 		if (agence == NULL)
 		{
 			fail("parsing data file ville process(2), check(3) failed: wrong JSON data type or format");
 			json_decref(ville_object);
 			return EXIT_FAILURE;
 		}
-		
+
 
 		if(!addAgence(ville->liste_agences, agence))
 		{
@@ -563,18 +571,18 @@ int parse_ville_data(Ville ville)
 			json_decref(ville_object);
 			return EXIT_FAILURE;
 		}
-		
+
 		if(index < breakout )
 		{
 			liste_agence=liste_agence->next_agence;
 		}
 
 	}
-	
+
 	liste_agence->next_agence=ville->liste_agences; //circular stack
-	
+
 	json_decref(ville_object);
-	
+
 	return EXIT_SUCCESS;
 }
 
@@ -603,7 +611,7 @@ int parse_agence_data(Agence agence)
 
 /*----------------------CLIENT--------------------*/
 
-	client_array = json_object_get(agence_object, "liste_clients");
+	client_array = json_object_get(agence_object, "liste_client");
 
 	if (!json_is_array(client_array))
 	{
@@ -614,8 +622,8 @@ int parse_agence_data(Agence agence)
 
 	size_t index, breakout = json_array_size(client_array) - 1;
 
-	agence->liste_clients = init_liste_clients();
-	lClients liste_client= agence->liste_clients;
+	agence->liste_client = init_liste_client();
+	lClient liste_client= agence->liste_client;
 	Client client;
 
 	json_array_foreach(client_array, index, agence_object)
@@ -629,7 +637,7 @@ int parse_agence_data(Agence agence)
 			return EXIT_FAILURE;
 		}
 
-		if (!addClient(agence->liste_clients, client))
+		if (!addClient(agence->liste_client, client))
 		{
 			fail("parsing data file agence process(1.2), check(4) failed: data contains a duplicate");
 			json_decref(agence_object);
@@ -642,11 +650,11 @@ int parse_agence_data(Agence agence)
 		}
 	}
 
-	liste_client->next_client = agence->liste_clients; //circular stack
+	liste_client->next_client = agence->liste_client; //circular stack
 
 /*-----------------------COMPTE---------------------------*/
 
-	compte_array = json_object_get(agence_object, "liste_comptes");
+	compte_array = json_object_get(agence_object, "liste_compte");
 
 	if (!json_is_array(compte_array))
 	{
@@ -657,13 +665,21 @@ int parse_agence_data(Agence agence)
 
 	size_t index, breakout = json_array_size(compte_array) - 1;
 
-	agence->liste_comptes = init_liste_comptes();
-	lComptes liste_compte = agence->liste_comptes;
-	Compte compte;
+	agence->liste_compte = init_liste_compte();
+	lCompte liste_compte = agence->liste_compte;
+	Compte compte=init_compte();
 
 	json_array_foreach(compte_array, index, agence_object)
 	{
-		compte = parse_compte_struct(agence_object, 0);
+		char* uuid_compte=json_string_value(json_object_get(agence_object, "uuid_compte"));
+		char* iban=json_string_value(json_object_get((json_object_get(agence_object, "rib")), "iban"));
+
+		compte->type_compte=json_integer_value(json_object_get(agence_object, "type_compte"));
+
+		compte->rib->iban=(const char*)calloc(IBAN_SIZE, sizeof(char));
+
+		strcpy(compte->rib->iban, iban);
+		strcpy(compte->uuid_compte, uuid_compte);
 
 		if (compte == NULL)
 		{
@@ -672,7 +688,7 @@ int parse_agence_data(Agence agence)
 			return EXIT_FAILURE;
 		}
 
-		if (!addCompte(agence->liste_comptes, compte))
+		if (!addCompte(agence->liste_compte, compte))
 		{
 			fail("parsing data file agence process(2.2), check(4) failed: data contains a duplicate");
 			json_decref(agence_object);
@@ -685,11 +701,11 @@ int parse_agence_data(Agence agence)
 		}
 	}
 
-	liste_compte->next_compte = agence->liste_comptes; //circular stack
+	liste_compte->next_compte = agence->liste_compte; //circular stack
 
 
 /*------------------------CONSEILLERS--------------------------*/
-	conseiller_array = json_object_get(agence_object, "liste_conseillers");
+	conseiller_array = json_object_get(agence_object, "liste_conseiller");
 
 	if (!json_is_array(conseiller_array))
 	{
@@ -700,8 +716,8 @@ int parse_agence_data(Agence agence)
 
 	size_t index, breakout = json_array_size(conseiller_array) - 1;
 
-	agence->liste_conseillers = init_liste_conseillers();
-	lConseiller liste_conseiller = agence->liste_conseillers;
+	agence->liste_conseiller = init_liste_conseiller();
+	lConseiller liste_conseiller = agence->liste_conseiller;
 	Conseiller conseiller;
 
 	json_array_foreach(conseiller_array, index, agence_object)
@@ -715,7 +731,7 @@ int parse_agence_data(Agence agence)
 			return EXIT_FAILURE;
 		}
 
-		if (!addConseiller(agence->liste_conseillers, conseiller))
+		if (!addConseiller(agence->liste_conseiller, conseiller))
 		{
 			fail("parsing data file agence process(2.2), check(4) failed: data contains a duplicate");
 			json_decref(agence_object);
@@ -728,9 +744,154 @@ int parse_agence_data(Agence agence)
 		}
 	}
 
-	liste_conseiller->next_conseiller = agence->liste_conseillers; //circular stack
+	liste_conseiller->next_conseiller = agence->liste_conseiller; //circular stack
 
 	json_decref(agence_object);
 
 	return EXIT_SUCCESS;
 }
+
+
+
+int login_key_parsing(Login login, Client client, Conseiller conseiller, Ville ville, Agence agence, int option)
+{
+	const char *path = malloc((strlen(ville->uuid_ville)+1+strlen(agence->uuid_agence)+1)*sizeof(char));
+
+	strcpy(path, ville->uuid_ville);
+	strcat(path, "/");
+	strcat(path, agence->uuid_agence);
+	switch (option)
+	{
+	case 1:
+		json_t ** result=login_id_parsing(path, agence, client, NULL);
+		if(result[0]!=NULL && result[1]!=NULL)
+		{
+			json_t *login_js=json_object_get(result[1], "login_client");
+			if(strcpy(client->client_login->login_key,json_string_value(json_object_get(login_js, "login_key")))==0)
+			{
+				fputs("login client is VALID", stdout);
+				json_decrefp(result);
+				return EXIT_SUCCESS;
+			}
+			fputs("login client is INVALID", stdout);
+
+			json_decrefp(result);
+
+			return EXIT_FAILURE;
+		}
+		break;
+	case 2:
+		json_t ** result=login_id_parsing(path, agence, client, NULL);
+
+		if(result[0]!=NULL && result[1]!=NULL)
+		{
+			json_t *login_js=json_object_get(result[1], "login_client");
+
+			if(strcpy(client->client_login->login_key,json_string_value(json_object_get(login_js, "login_key")))==0)
+			{
+				fputs("login client is VALID", stdout);
+
+				if(login==NULL || login->login_id==NULL || login->login_key==NULL)
+				{
+					fail("login changing password process, check failed: data contains an invalid pointer ");
+					json_decrefp(result);
+					return EXIT_FAILURE;
+				}
+				fputs("Changing password...", stdout);
+
+				json_t *new_login=json_pack("{s:s, s:s}", "login_id", login->login_id, "login_key", login->login_key);
+
+				json_object_set_new(result[1], "login_client", new_login);
+
+				json_dump_data_file(result[0], path);
+
+				fputs("Password change is done...", stdout);
+
+				json_decrefp(result);
+
+				return EXIT_SUCCESS;
+			}
+			fputs("login client is INVALID", stdout);
+
+			json_decrefp(result);
+
+			return EXIT_FAILURE;
+		}
+		break;
+	case 3:
+		json_t ** result=login_id_parsing(path, agence, NULL, conseiller);
+		if(result[0]!=NULL && result[1]!=NULL)
+		{
+			json_t *login_js=json_object_get(result[1], "login_conseiller");
+			if(strcpy(conseiller->login_conseiller->login_key,json_string_value(json_object_get(login_js, "login_key")))==0)
+			{
+				fputs("login conseiller is VALID", stdout);
+				json_decrefp(result);
+				return EXIT_SUCCESS;
+			}
+			fputs("login conseilller is INVALID", stdout);
+			json_decrefp(result);
+			return EXIT_FAILURE;
+		}
+		break;
+	case 4:
+		json_t ** result=login_id_parsing(path, agence, NULL, conseiller);
+
+		if(result[0]!=NULL && result[1]!=NULL)
+		{
+			json_t *login_js=json_object_get(result[1], "login_conseiller");
+
+			if(strcpy(conseiller->login_conseiller->login_key,json_string_value(json_object_get(login_js, "login_key")))==0)
+			{
+				fputs("login conseiller is VALID", stdout);
+
+				if(login==NULL || login->login_id==NULL || login->login_key==NULL)
+				{
+					fail("login changing password process, check failed: data contains an invalid pointer ");
+					json_decrefp(result);
+					return EXIT_FAILURE;
+				}
+				fputs("Changing password...", stdout);
+
+				json_t *new_login=json_pack("{s:s, s:s}", "login_id", login->login_id, "login_key", login->login_key);
+
+				json_object_set_new(result[1], "login_conseiller", new_login);
+
+				json_dump_data_file(result[0], path);
+
+				fputs("Password change is done...", stdout);
+
+				json_decrefp(result);
+
+				return EXIT_SUCCESS;
+			}
+			fputs("login conseiller is INVALID", stdout);
+
+			json_decrefp(result);
+
+			return EXIT_FAILURE;
+		}
+		break;///////////////////////////////////////////////////////////////////////////
+
+	default:
+		fputs("INVALID logon", stdout);
+
+		json_decrefp(result);
+
+		return EXIT_FAILURE;
+
+	}
+}
+
+
+int parse_compte_data(Compte compte);
+int parse_client_data(Client client);
+int parse_conseiller_data(Conseiller conseiller);
+int parse_full_data(lData Data);
+
+int dump_compte_data(Compte compte);
+int dump_client_data(Client client);
+int dump_agence_data(Client client);
+int dump_basic_data(Client client);
+
+

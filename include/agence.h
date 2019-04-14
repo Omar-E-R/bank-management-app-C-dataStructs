@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include "client.h"
-#include "generateRand.h"
+#include "random.h"
 
 typedef struct agence_size
 {
@@ -12,33 +12,33 @@ typedef struct agence_size
 
 typedef struct liste_compte
 {
-    Compte compte;
+	Compte compte;
 
-    lComptes next_compte;
+	lCompte next_compte;
 
-} *lComptes;
+} *lCompte;
 
-typedef struct liste_clients
+typedef struct liste_client
 {
-    Client client;
-    lClients next_client;
+	Client client;
+	lClient next_client;
 
-} *lClients;
+} *lClient;
 
 typedef struct agence
 {
-    const char* uuid_agence;
+	const char* uuid_agence;
 
 	const char *code_bic;
 	const char *indicatif_agence;
 	const char *domiciliation_agence;
 	const char *hash_code;
 
-    lComptes liste_comptes;
+	lCompte liste_compte;
 
-    lClients liste_clients;
+	lClient liste_client;
 
-    lConseiller liste_conseillers;
+	lConseiller liste_conseiller;
 
 }*Agence;
 
@@ -54,13 +54,23 @@ typedef struct conseiller
 
 typedef struct liste_conseiller
 {
-    Conseiller conseiller;
-	
+	Conseiller conseiller;
+
 	lConseiller next_conseiller;
 }*lConseiller;
 
-Agence init_agence_arg(agence_size_t allocation_size, char *uuid_agence, char *code_bic, int indicatif_agence, char *domiciliation_agence, char *hash_code);
-lClients init_liste_clients();
-int addClient(lClients liste_client, Client client);
-	Client decrypt_client();
-Admin decrypt_admin();
+lCompte init_liste_compte();
+lClient init_liste_client();
+Conseiller init_conseiller();
+Conseiller init_conseiller_arg(char* uuid_conseiller, int statut);
+lConseiller init_liste_conseiller();
+Agence init_agence();
+Agence init_agence_arg(agence_size_t allocation_size,char *uuid_agence, char *code_bic, int indicatif_agence, char *domiciliation_agence, char *hash_code);
+Agence new_agence(const char* domiciliation, const char* uuid_ville);
+Conseiller new_conseiller(Donnees_Personnelles info_conseiller);
+int isEqualConseiller(Conseiller employe1, Conseiller employe2);
+int isEqualAgence(Agence agence1, Agence agence2);
+
+int addConseiller(lConseiller liste_conseiller, Conseiller conseiller);
+int addCompte(lCompte liste_compte, Compte compte);
+int addClient(lClient liste_client, Client client);
