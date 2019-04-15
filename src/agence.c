@@ -1,6 +1,50 @@
 #include "agence.h"
 
 
+struct conseiller
+{
+	const char *uuid_conseiller;
+	int statut;
+
+	Donnees_Personnelles info_conseiller;
+	Login login_conseiller;
+
+};
+struct liste_compte
+{
+	Compte compte;
+
+	lCompte next_compte;
+
+};
+struct liste_client
+{
+	Client client;
+	lClient next_client;
+
+};
+struct liste_conseiller
+{
+	Conseiller conseiller;
+
+	lConseiller next_conseiller;
+};
+struct agence
+{
+	const char* uuid_agence;
+
+	const char *code_bic;
+	const char *indicatif_agence;
+	const char *domiciliation_agence;
+	const char *hash_code;
+
+	lCompte liste_compte;
+
+	lClient liste_client;
+
+	lConseiller liste_conseiller;
+
+};
 
 lCompte init_liste_compte()
 {
@@ -155,23 +199,29 @@ int addConseiller(lConseiller liste_conseiller, Conseiller conseiller)
 
 int addCompte(lCompte liste_compte, Compte compte)
 {
-	if (liste_compte == NULL || compte == NULL)
-	{
-		return EXIT_FAILURE;
-	}
-	if (liste_compte->compte == NULL && compte != NULL)
-	{
-		liste_compte->compte = compte;
-		return EXIT_SUCCESS;
-	}
-	if (liste_compte->next_compte == NULL && isEqualCompte(liste_compte->compte, compte) != EXIT_SUCCESS)
-	{
-		liste_compte->next_compte = init_liste_compte();
-		liste_compte->next_compte->compte = compte;
+	lCompte var = liste_compte;
 
-		return EXIT_SUCCESS;
+	while (var != NULL)
+	{
+		if (var->compte != NULL)
+		{
+			if (isEqualCompte((var->compte), compte) == EXIT_SUCCESS)
+			{
+				return EXIT_FAILURE;
+			}
+		}
+		else
+		{
+			var->compte = compte;
+			return EXIT_SUCCESS;
+		}
+		if (var->next_compte == NULL)
+		{
+			var->next_compte = init_compte();
+		}
+		var = var->next_compte;
 	}
-	return addcompte(liste_compte->next_compte, compte);
+	return EXIT_SUCCESS;
 }
 
 int addClient(lClient liste_client, Client client)
@@ -199,3 +249,4 @@ int addClient(lClient liste_client, Client client)
 		var = var->next_client;
 	}
 	return EXIT_SUCCESS;
+}

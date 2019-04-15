@@ -3,8 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "compte.h"
-#include "login.h"
+#include"compte.h"
+#include"login.h"
+#include"random.h"
 
 enum allocations_size_client
 {
@@ -58,46 +59,14 @@ typedef enum
 } donnees_perso_t;
 
 
-typedef struct donnees_personnelles
-{
+typedef struct donnees_personnelles *Donnees_Personnelles;
+typedef struct client *Client;
+typedef union client_s Client_s;
 
-	const char *nom;
-	const char *prenom;
-	char sexe;
-
-	const char* date_de_naissance;
-
-	const char *email;
-	const char *adresse;
-
-
-	int code_postale;
-	const char *nom_ville;
-	const char *complement_ad;
-	const char *numero_mobile;
-	const char *numero_fixe;
-
-	const char* carte_identite;
-	const char* date_de_creation;
-
-} * Donnees_Personnelles;
-
-
-typedef struct client{
-
-	const char* uuid_client;
-	Login client_login;
-	int statut;
-
-	Donnees_Personnelles donnees_perso;
-
-	Compte comptes;
-
-}* Client;
-
+int isEqualClient(Client client1, Client client2);
+Client init_client_arg(char* uuid_client, int statut);
+Client_s init_client_s_arg(client_size_t alloc_size,char** uuid_client, char** titulaire);
 Donnees_Personnelles init_donnees_perso_arg(client_size_t alloc_size, char sexe, char *nom, char *prenom, char *date_de_naissance, char *email, char* adresse, int code_postale, char* nom_ville, char* complement_ad, char* numero_mobile, char* numero_fixe, char* carte_id, char* date_de_creation);
-
-
 donnees_perso_t *equalAllClient(Client client1, Client client2);
 
 #endif

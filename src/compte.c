@@ -1,11 +1,47 @@
 #include "compte.h"
+union client_s
+{
+	Client client;
+
+	Client clients[2];
+
+};
+struct rib
+{
+	const char* iban;
+	const char* code_bic;
+	const char* numero_compte;
+	const char* indicatif_agence;
+	const char* domiciliation_agence;
+
+};
+struct compte
+{
+	const char* uuid_compte;
+
+	compte_t statut; //compte supprime ? i.e actif ou non actif
+	compte_t nature_compte;
+	compte_t type_compte;//LIVRET...
+
+	double solde;
+
+	const char *operations;//A FILENAME OR MAYBE I WILL CHANGE IT TO A FILE POINTER
+
+	Rib rib;
+
+	Compte next_compte;
+
+	Client_s titulaire;
+};
+
+
 
 /* A client can and only have one shared (joint) bank account*/
 
-int get_solde()
-{
-	return Compte_Courant->solde;
-}
+// int get_solde()
+// {
+// 	return Compte_Courant->solde;
+// }
 
 int get_operations()
 {
@@ -149,7 +185,25 @@ int compareComptes(Compte c1, Compte c2,  compte_element_t element)
 	return EXIT_FAILURE;
 
 }
+int add_compte(Compte comptes, Compte c)
+{
+	Compte var = comptes;
 
+	while (var != NULL)
+	{
+
+		if (isEqualCompte((var), c) == EXIT_SUCCESS)
+		{
+			return EXIT_FAILURE;
+		}
+		if (var->next_compte == NULL)
+		{
+			var->next_compte= c;
+		}
+		var = var->next_compte;
+	}
+	return EXIT_SUCCESS;
+}
 Compte containsCompte(Compte comptes, Compte var)
 {
 	if(comptes==NULL)
@@ -253,25 +307,24 @@ Compte init_compte()
 }
 
 
-Compte init_compte_arg(char* uuid_compte,int statut, int nature_compte, int type_compte, double solde, char* operations)
+Compte init_compte_arg(char* uuid_compte, char* iban, int nature_compte, int type_compte, char* operations, Client_s titulaire)
 {
 	Compte newCompte = (Compte)calloc( 1, sizeof(struct compte) );
 
 	newCompte->uuid_compte = (const char *)calloc(UUID_SIZE, sizeof(char));
-	newCompte->operations = (const char *)calloc(strlen(operations)+1, sizeof(char));
+	newCompte->operations = (const char *)calloc(UUID_SIZE, sizeof(char));
 
 	strcpy(newCompte->uuid_compte, uuid_compte);
 	strcpy(newCompte->operations, operations);
 
 	/* TYPE COMPTE */
-	newCompte->statut = statut;
 	newCompte->nature_compte = nature_compte;
 	newCompte->type_compte = type_compte;
 	/*-----------*/
-
-
-	newCompte->solde = solde;
-
+	newCompte->titulaire=titulaire;
+	newCompte->rib->iban = (const char *)calloc(IBAN_SIZE, sizeof(char));
+	newCompte->rib=(Rib)calloc(1, sizeof(struct rib));
+	strcpy(newCompte->rib->iban, iban);
 
 	newCompte->next_compte=NULL;
 

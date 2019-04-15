@@ -1,8 +1,10 @@
+#ifndef VILLE_H
+#define VILLE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "agence.h"
-#define BANK_NUMBER 40305
+#include"agence.h"
 
 typedef struct ville_size
 {
@@ -10,66 +12,37 @@ typedef struct ville_size
 
 } ville_size_t;
 
-
-#define WORKSPACE "/path/to/workspace/"
-#define DATABASE "database directory name/"
+#define FILENAME_MAX_ 216
+#define DATABASE "./database"
 #define BASIC_DATA "basic_data.json"
 
-typedef enum
-{
-	Toulouse=31000
-	//on peut en rajouter d'autres
-}Nom_Ville;
 
-typedef struct liste_agence
-{
-	Agence agence;
-	lAgence next_agence;
-}*lAgence;
+// typedef enum
+// {
+// 	Toulouse=31000
+// 	//on peut en rajouter d'autres
+// }Nom_Ville;
 
-typedef struct ville
-{
-	const char *uuid_ville;
 
-	const char* nom_ville;
+typedef struct liste_agence *lAgence;
 
-	const char *code_postale;
+typedef struct ville *Ville;
 
-	const char *hash_code;
+typedef struct data *lData;
 
-	lAgence liste_agences;
+typedef struct admin *Admin;
 
-} * Ville;
-
-typedef struct data
-{
-	Ville ville;
-
-	lData next_ville;
-
-}*lData;
-
-typedef struct admin
-{
-	const char* uuid_admin;
-
-	Login_Admin login_admin;
-
-	Admin next_admin;
-
-}*Admin;
-
-Ville init_ville();
-lAgence init_liste_agence();
-
-Ville init_ville_arg(ville_size_t allocation_size,char* uuid_ville, int code_postale, char* nom_ville, char* hash_code);
-
-lData init_data();
-Admin init_admin();
 Admin new_admin();
+Admin init_admin();
+lAgence init_liste_agence();
+Ville init_ville();
 Ville new_ville(const char* nom_ville, const char* code_postale);
+lData init_data();
+Ville init_ville_arg(ville_size_t allocation_size,char* uuid_ville,int code_postale,char* nom_ville,char* hash_code);
 int addAgence(lAgence liste_agence, Agence agence);
 int isEqualVille(Ville ville1, Ville ville2);
 int isEqualAdmin(Admin admin1, Admin admin2);
 int addVille(lData liste_ville, Ville ville);
 int addAdmin(Admin lAdmin, Admin admin);
+
+#endif

@@ -1,18 +1,11 @@
+#include"random.h"
 
-#include "generateRand.h"
+#define RAND_MAX_SEARCH 9999999
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
-#include <time.h>
-#include <ctype.h>
-#include <unistd.h>
 
-#define RAND_MAX_SEARCH 9999999999
-#define SIZE 6 //size of random generated numbers
-#define SIZE_FULL 10//size of login id
-#define SIZE_RAND 2//size of random generated int that can be equals
+static size_t SIZE=6; //size of random generated numbers
+static size_t SIZE_FULL=10;//size of login id
+static size_t SIZE_RAND_DUP=2;//size of random generated int that can be equals
 
 enum boolean
 {
@@ -29,13 +22,13 @@ struct arbre
 	Arbre next_arbre;
 };
 
-int rand_tab_has_duplicates(int *rand_tab)
+static int rand_tab_has_duplicates(int *rand_tab)
 {
 	int i = 0, j;
 	/* FIRST 4 CARACTERS MUST NOT HAVE DUPLICATES*/
-	for (i = 0; i < SIZE - SIZE_RAND; i++)
+	for (i = 0; i < SIZE - SIZE_RAND_DUP; i++)
 	{
-		for (j = 0; j < SIZE - SIZE_RAND; j++)
+		for (j = 0; j < SIZE - SIZE_RAND_DUP; j++)
 		{
 			if (i != j && rand_tab[i] == rand_tab[j])//IF THERE IS A DUPLICATE
 			{
@@ -46,7 +39,7 @@ int rand_tab_has_duplicates(int *rand_tab)
 	return 0;
 }
 
-void zeros_tab(int *rand_tab)
+static void zeros_tab(int *rand_tab)
 {
 	int i;
 	for (i = 0; i < SIZE; i++)
@@ -55,7 +48,7 @@ void zeros_tab(int *rand_tab)
 	}
 }
 /* GENERATES [SIZE] (6) INTEGERS THAT AT MOST HAS TWO OF THE SAME INTEGERS */
-int randd(int *rand_tab)
+static int randd(int *rand_tab)
 {
 	zeros_tab(rand_tab);
 	unsigned long int errors=0;
@@ -72,11 +65,11 @@ int randd(int *rand_tab)
 
 	if(errors >= RAND_MAX_SEARCH)
 		return EXIT_FAILURE;
-	
-	return 0;
+
+	return EXIT_SUCCESS;
 }
 
-unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
+static unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
 {
 	a = a - b;
 	a = a - c;
@@ -108,7 +101,7 @@ unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
 	return c;
 }
 
-int* to_array(Arbre arbre)
+static int* to_array(Arbre arbre)
 {
 	Arbre var=arbre;
 
@@ -119,7 +112,7 @@ int* to_array(Arbre arbre)
 	for (i = 0; i < SIZE_FULL; i++)
 	{
 		tab[i] = var->valeur;
-		
+
 		var = var->next_arbre;
 	}
 	return tab;
@@ -128,6 +121,9 @@ int* to_array(Arbre arbre)
 /* GENERATES 10 INTEGERS ID ENCODED WITH THE 4 INTEGERS CODE PROVIDED */
 int* login_id_generator(int *code)
 {
+	SIZE=6;
+	SIZE_FULL=10;
+	SIZE_RAND_DUP=2;
 	struct timeval time; //accurate time to the microseconds
 
 	gettimeofday(&time, NULL);
@@ -194,7 +190,7 @@ int* login_id_generator(int *code)
 		count->parcouru = true;
 
 		count = arbre; //pointing back to the head
-		
+
 		for (j = 0; j < rand_tab[i]; j++)//going to rand_tab[i] index
 		{
 			count = count->next_arbre;
@@ -207,7 +203,7 @@ int* login_id_generator(int *code)
 			}
 		}
 		/*  Adding the VALUE code to the arbre */
-		if (i >= SIZE-SIZE_RAND)
+		if (i >= SIZE-SIZE_RAND_DUP)
 		{
 			count->valeur = rand_tab[i + 1];
 			count->parcouru = true;
@@ -218,12 +214,15 @@ int* login_id_generator(int *code)
 			count->parcouru = true;
 		}
 	}
-	
+
 	return to_array(arbre);
 }
 
-int login_id_decoding(int* login_id)
+int login_id_decoder(int* login_id)
 {
+	SIZE=6;
+	SIZE_FULL=10;
+	SIZE_RAND_DUP=2;
 	Arbre arbre = (Arbre)malloc(sizeof(struct arbre)), count = arbre;
 
 	int i;
@@ -235,7 +234,7 @@ int login_id_decoding(int* login_id)
 
 		if (i == SIZE_FULL - 1)
 			break;
-		
+
 		count->next_arbre = (Arbre)malloc(sizeof(struct arbre));
 
 		count = count->next_arbre;
@@ -247,7 +246,7 @@ int login_id_decoding(int* login_id)
 
 	int valeur;
 	int j;
-	for (i = 0; i < SIZE - SIZE_RAND; i++)
+	for (i = 0; i < SIZE - SIZE_RAND_DUP; i++)
 	{
 
 		if (count->parcouru != true)
@@ -264,7 +263,7 @@ int login_id_decoding(int* login_id)
 		count->parcouru = false;
 
 		count = arbre; //pointing to the head
-		
+
 		for (j = 0; j < valeur; j++)
 		{
 			count = count->next_arbre;
@@ -284,13 +283,13 @@ int login_id_decoding(int* login_id)
 	return 0;
 }
 
-const char* uuid_gen(const char* uuid)
+int uuid_gen(const char* uuid)
 {
 	uuid_t binuuid;
 	/*
      * Generate a UUID. We're not done yet, though,
-     * for the UUID generated is in binary format 
-     * (hence the variable name). We must 'unparse' 
+     * for the UUID generated is in binary format
+     * (hence the variable name). We must 'unparse'
      * binuuid to get a usable 36-character string.
      */
 	uuid_generate_random(binuuid);
@@ -318,5 +317,100 @@ const char* uuid_gen(const char* uuid)
 	// Equivalent of printf("%s\n", uuid); - just my personal preference
 	//puts(uuid);
 
-	return uuid;
+	return EXIT_SUCCESS;
+}
+
+static int array_to_int(int* array, size_t n)
+{
+	size_t i;
+	int dec=1, res=0;
+	for(i=n; i>-1; i--)
+	{
+		res+= array[i]*dec;
+		dec*=10;
+	}
+	return res;
+}
+static int array_has(int* array, int nb, size_t n)
+{
+	size_t i;
+	for(i=0; i<n; i++)
+	{
+		if(array[i]==nb)
+			return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+int indicatif_gen(const char **indicatif_agence, size_t nb_ids)
+{
+	SIZE=5;
+	SIZE_RAND_DUP=3;
+
+	int* rand_tab[nb_ids];
+	int *res=calloc(nb_ids, sizeof(int));
+	int nb;
+	size_t i=0, errors=0;
+
+	for(i=0; i<nb_ids; i++)
+	{
+		do
+		{
+			if(!randd(rand_tab[i]))
+				exit(EXIT_FAILURE);
+
+			nb=array_to_int(rand_tab[i], 5);
+
+			errors++;
+
+			if(errors> RAND_MAX_SEARCH)
+			{
+				exit(EXIT_FAILURE);
+			}
+		} while (array_has(res, nb, i+1));
+
+	}
+
+	for ( i = 0; i < nb_ids; i++)
+	{
+		sprintf(indicatif_agence[i],"%05d", res[i] );
+	}
+	return EXIT_SUCCESS;
+}
+
+int global_account_number=10000;//init starts at 10000
+
+int iban_gen(const char *iban, const char *indicatif_agence, const char* code_postale)
+{
+	sprintf(iban,"FR%.2s%.5s%.5s", code_postale, BANK_NUMBER, indicatif_agence);
+
+	int i, error;
+	do
+	{
+	 	i=(rand() % 10000);
+		error++;
+		if(error>RAND_MAX_SEARCH)
+			exit(EXIT_FAILURE);
+	} while (i==0);
+
+	global_account_number+=i;
+
+	char res[11];
+
+	sprintf(res, "%010d", global_account_number);
+
+	char key= (65 + (rand () % 91));
+	error=0;
+	do
+	{
+	 	i=(rand() % 100);
+		error++;
+		if(error>RAND_MAX_SEARCH)
+			exit(EXIT_FAILURE);
+	} while (i==0);
+
+	sprintf(iban, "%.10s%c%02d", res, key, i);
+
+
+	return EXIT_SUCCESS;
+
 }

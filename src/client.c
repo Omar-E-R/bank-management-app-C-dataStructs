@@ -1,5 +1,52 @@
 #include "client.h"
 
+struct donnees_personnelles
+{
+
+	const char *nom;
+	const char *prenom;
+	char sexe;
+
+	const char* date_de_naissance;
+
+	const char *email;
+	const char *adresse;
+
+
+	int code_postale;
+	const char *nom_ville;
+	const char *complement_ad;
+	const char *numero_mobile;
+	const char *numero_fixe;
+
+	const char* carte_identite;
+	const char* date_de_creation;
+
+};
+struct client{
+
+	const char* uuid_client;
+	Login client_login;
+	int statut;
+
+	Donnees_Personnelles donnees_perso;
+
+	Compte comptes;
+
+};
+
+
+union client_s
+{
+	Client client;
+
+	Client clients[2];
+
+};
+
+
+
+
 /* CREATES A NEW CLIENT STRUCT, ALLOCATES DYNAMIC MEMORY FOR IT AND IT INITIALIZE ITS PARAMETERS */
 Donnees_Personnelles init_donnees_perso()
 {
@@ -98,6 +145,42 @@ Client init_client_arg(char* uuid_client, int statut)
 
 
     return newClient;
+
+}
+Client_s init_client_s_arg(client_size_t alloc_size,char** uuid_client, char** titulaire)
+{
+    Client_s client;
+	if(uuid_client[1]==NULL)
+	{
+		client.client=(Client)calloc(1,sizeof(struct client));
+		client.client->uuid_client=calloc(UUID_SIZE, sizeof(char));
+		client.client->donnees_perso= calloc(1,sizeof(struct donnees_personnelles));
+		client.client->donnees_perso->nom= (const char *)calloc(alloc_size.nom_size, sizeof(char));
+		client.client->donnees_perso ->prenom= (const char *)calloc(alloc_size.prenom_size, sizeof(char));
+		strcpy(client.client->donnees_perso->nom, titulaire[0]);
+		strcpy(client.client->donnees_perso->prenom, titulaire[1]);
+		strcpy(client.client->uuid_client, uuid_client[0]);
+	}else
+	{
+		client.clients[0]=(Client)calloc(1,sizeof(struct client));
+		client.clients[1]=(Client)calloc(1,sizeof(struct client));
+		client.clients[0]->uuid_client=calloc(UUID_SIZE, sizeof(char));
+		client.clients[1]->uuid_client=calloc(UUID_SIZE, sizeof(char));
+		client.clients[0]->donnees_perso= calloc(1,sizeof(struct donnees_personnelles));
+		client.clients[1]->donnees_perso= calloc(1,sizeof(struct donnees_personnelles));
+		client.clients[0]->donnees_perso->nom= (const char *)calloc(NOM_SIZE, sizeof(char));
+		client.clients[1]->donnees_perso->nom= (const char *)calloc(NOM_SIZE, sizeof(char));
+		client.clients[0]->donnees_perso ->prenom= (const char *)calloc(PRENOM_SIZE, sizeof(char));
+		client.clients[1]->donnees_perso ->prenom= (const char *)calloc(PRENOM_SIZE, sizeof(char));
+		strcpy(client.clients[0]->donnees_perso->nom, titulaire[0]);
+		strcpy(client.clients[1]->donnees_perso->nom, titulaire[2]);
+		strcpy(client.clients[0]->donnees_perso->prenom, titulaire[1]);
+		strcpy(client.clients[1]->donnees_perso->prenom, titulaire[3]);
+		strcpy(client.clients[0]->uuid_client, uuid_client[0]);
+		strcpy(client.clients[1]->uuid_client, uuid_client[1]);
+	}
+
+    return client;
 
 }
 
@@ -235,33 +318,31 @@ Client new_client(Donnees_Personnelles info_client)
 
 	uuid_gen(newClient->uuid_client);
 
+	return newClient;
+
 }
 
 
-Client_s new_client(Client client1, Client client2)
+Client_s new_clients(Client client1, Client client2)
 {
 
-	if(client1!=NULL & client2!=NULL)
-	{
 		Client_s client;
+	if(client1!=NULL && client2!=NULL)
+	{
 
 		client.clients[0]=client1;
 		client.clients[1]=client2;
 
 		return client;
 
+	}
+	if(client2==NULL)
+	{
+		client.client = client1;
+		return client;
 	}else
 	{
-		Client_s client;
-
-		if(client2==NULL)
-		{
-			client.client = client1;
-		}else
-		{
-			client.client = client1;
-		}
-
+		return client;
 	}
 
 }

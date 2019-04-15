@@ -3,8 +3,19 @@
 #define USERNAME_SIZE 20
 #define PASSWORD_SIZE 50
 
+struct login
+{
+    const char* login_id;
+    const char* login_key;
 
-Client identifier;
+};
+struct login_admin
+{
+    const char* code_agence;
+    const char* login_id;
+    const char* pin;
+
+};
 
 /*
 implementation des fonctions de identifications
@@ -72,6 +83,8 @@ Login init_login_arg(login_size_t alloc_size, char* id, char* key)
 
 	return login;
 }
+
+
 Login init_login_admin()
 {
 	Login_Admin login_admin = (const char *)calloc(1, sizeof(struct login_admin));
@@ -82,6 +95,8 @@ Login init_login_admin()
 
 	return login_admin;
 }
+
+
 int encrypt_login_pass(Login user)
 {
 
@@ -128,55 +143,96 @@ int encrypt_login_pass(Login user)
 
     return EXIT_SUCCESS;
 }
-const char* decrypt_login_id(Login user){
 
-
-    return 0;
-
-}
-
-int decrypt_login_pass(Login user)
+int encrypt_code(const char* hash_code)
 {
-    char login_key[64];
-    char orig[9] = "eggplant";
+    char key[64];
+
     char buf[64];
-    char txt[9];
+
+	size_t length=strlen(hash_code);
+
+    char *txt= malloc((length+1) *sizeof(char));
+
     int i, j;
 
     for (i = 0; i < 64; i++)
     {
-        login_key[i] = rand() & 1;
+        key[i] = rand() & 1;
     }
 
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < length; i++)
     {
-        for (j = 0; j < 8; j++)
+        for (j = 0; j < length; j++)
         {
-            buf[i * 8 + j] = orig[i] >> j & 1;
+            buf[i * length + j] = hash_code[i] >> j & 1;
         }
-        setkey(login_key);
+        setkey(key);
     }
-    printf("Before encrypting: %s\n", orig);
+    // printf("Before encrypting: %s\n", hash_code);
 
     encrypt(buf, 0);
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < length; i++)
     {
-        for (j = 0, txt[i] = '\0'; j < 8; j++)
+        for (j = 0, txt[i] = '\0'; j < length; j++)
         {
-            txt[i] |= buf[i * 8 + j] << j;
+            txt[i] |= buf[i * length + j] << j;
         }
-        txt[8] = '\0';
+        txt[length] = '\0';
+    }
+    // printf("After encrypting:  %s\n", txt);
+
+	strcpy(hash_code, txt);
+
+    exit(EXIT_SUCCESS);
+}
+/////////////////////////
+int decrypt_code(const char* hash_code)
+{
+    char key[64];
+
+    char buf[64];
+
+	size_t length=strlen(hash_code);
+
+    char *txt= malloc((length+1) *sizeof(char));
+
+    int i, j;
+
+    for (i = 0; i < 64; i++)
+    {
+        key[i] = rand() & 1;
+    }
+
+    for (i = 0; i < length; i++)
+    {
+        for (j = 0; j < length; j++)
+        {
+            buf[i * length + j] = hash_code[i] >> j & 1;
+        }
+        setkey(key);
+    }
+    printf("Before encrypting: %s\n", hash_code);
+
+    encrypt(buf, 0);
+    for (i = 0; i < length; i++)
+    {
+        for (j = 0, txt[i] = '\0'; j < length; j++)
+        {
+            txt[i] |= buf[i * length + j] << j;
+        }
+        txt[length] = '\0';
     }
     printf("After encrypting:  %s\n", txt);
 
-    encrypt(buf, 1);
-    for (i = 0; i < 8; i++)
+ encrypt(buf, 1);
+    for (i = 0; i < length; i++)
     {
-        for (j = 0, txt[i] = '\0'; j < 8; j++)
+        for (j = 0, txt[i] = '\0'; j < length; j++)
         {
-            txt[i] |= buf[i * 8 + j] << j;
+            txt[i] |= buf[i * length + j] << j;
         }
-        txt[8] = '\0';
+        txt[length] = '\0';
     }
     printf("After decrypting:  %s\n", txt);
     exit(EXIT_SUCCESS);

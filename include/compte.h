@@ -1,11 +1,11 @@
+#ifndef COMPTE_H
+#define COMPTE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "client.h"
-#include "random.h"
-
-
+#include"client.h"
 
 enum allocation_size_compte
 {
@@ -20,7 +20,7 @@ enum allocation_size_compte
 
 typedef struct rib_size
 {
-	 size_t iban_size, code_bic_size, numero_compte_size, indicatif_agence_size, domiciliation_size;
+	size_t iban_size, code_bic_size, numero_compte_size, indicatif_agence_size, domiciliation_size;
 }rib_size_t;
 
 typedef enum
@@ -54,63 +54,14 @@ typedef enum
 	UUID_COMPTE
 } compte_element_t;
 
+typedef struct rib *Rib;
 
-typedef union client_s
-{
-	Client client;
-
-	Client clients[2];
-
-} Client_s;
-
-typedef struct rib
-{
-	const char* iban;
-
-	const char* code_bic;
-	const char* numero_compte;
-	const char* indicatif_agence;
-	const char* domiciliation_agence;
-
-
-} * Rib;
-
-typedef struct compte
-{
-	const char* uuid_compte;
-
-	compte_t statut; //compte supprime ? i.e actif ou non actif
-	compte_t nature_compte;
-	compte_t type_compte;//LIVRET...
-
-	double solde;
-
-	const char *operations;//A FILENAME OR MAYBE I WILL CHANGE IT TO A FILE POINTER
-
-	Rib rib;
-
-	Client_s titulaire;
-
-
-
-	Compte next_compte;
-
-
-} *Compte;
+typedef struct compte *Compte;
+typedef union client_s Client_s;
+int isEqualCompte(Compte c1, Compte c2);
 Compte init_compte();
+int add_compte(Compte comptes, Compte c);
 Rib init_rib();
 Rib init_rib_arg(rib_size_t alloc_size, char* iban, char* code_bic, char* numero_compte, int indicatif_agence, char* domiciliation);
-
-Compte init_compte_arg(char* uuid_compte,int statut, int nature_compte, int type_compte, double solde, char* operations);
-
-Compte Compte_Courant;
-
-Compte request_new_acc(Client client1, Client client2, float solde);
-
-Compte add_new_acc(Admin admin, Client client1, Client client2, float solde);//ADMIN
-
-int modify_acc(Admin admin, Compte compte); //ADMIN
-
-int afficher_acc(Compte compte);
-
-void afficher_liste_acc(Admin admin, Compte liste_comptes,int type);//ADMIN
+Compte init_compte_arg(char* uuid_compte, char* iban, int nature_compte, int type_compte, char* operations, Client_s titulaire);
+#endif

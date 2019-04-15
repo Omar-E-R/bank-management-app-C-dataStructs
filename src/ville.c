@@ -1,13 +1,39 @@
 #include "ville.h"
 
-/*
+struct liste_agence
+{
+	Agence agence;
+	lAgence next_agence;
+};
+struct ville
+{
+	const char *uuid_ville;
 
+	const char* nom_ville;
 
-permet de decrypter les donnees des agences
+	const char *code_postale;
 
+	const char *hash_code;
 
+	lAgence liste_agences;
 
-*/
+};
+struct data
+{
+	Ville ville;
+
+	lData next_ville;
+
+};
+struct admin
+{
+	const char* uuid_admin;
+
+	Login_Admin login_admin;
+
+	Admin next_admin;
+
+};
 
 Ville init_ville_arg(ville_size_t allocation_size,char* uuid_ville,int code_postale,char* nom_ville,char* hash_code)
 {
@@ -135,41 +161,49 @@ int isEqualAdmin(Admin admin1, Admin admin2)
 
 int addVille(lData liste_ville, Ville ville)
 {
-	if (liste_ville == NULL || ville == NULL)
-	{
-		return EXIT_FAILURE;
-	}
-	if (liste_ville->ville== NULL && ville != NULL)
-	{
-		liste_ville->ville=ville;
-		return EXIT_SUCCESS;
-	}
-	if (liste_ville->next_ville == NULL && isEqualVille(liste_ville->ville, ville) != EXIT_SUCCESS)
-	{
-		liste_ville->next_ville=init_data();
-		liste_ville->next_ville->ville = ville;
+	lData var = liste_ville;
 
-		return EXIT_SUCCESS;
+	while (var!=NULL)
+	{
+		if(var->ville!=NULL)
+		{
+			if (isEqualAgence((var->ville), ville)==EXIT_SUCCESS)
+			{
+				return EXIT_FAILURE;
+			}
+
+		}else
+		{
+			var->ville=ville;
+			return EXIT_SUCCESS;
+		}
+		if(var->next_ville==NULL)
+		{
+			var->next_ville= init_data();
+		}
+		var=var->next_ville;
+
 	}
-	return addVille(liste_ville->next_ville, ville);
+	return EXIT_SUCCESS;
 }
 int addAdmin(Admin lAdmin, Admin admin)
 {
-	if (lAdmin == NULL || admin == NULL)
+	Admin var = lAdmin;
+
+	while (var!=NULL)
 	{
-		return EXIT_FAILURE;
+
+		if (isEqualAgence(var, admin)==EXIT_SUCCESS)
+		{
+			return EXIT_FAILURE;
+		}
+
+		if(var->next_admin==NULL)
+		{
+			var->next_admin= admin;
+		}
+		var=var->next_admin;
+
 	}
-	if (lAdmin->next_admin == NULL && isEqualAdmin(lAdmin, admin) != EXIT_SUCCESS)
-	{
-		lAdmin->next_admin = admin;
-
-		return EXIT_SUCCESS;
-	}
-	return addAdmin(lAdmin->next_admin, admin);
-}
-
-Ville decrypt_agence(Login user)
-{
-
-
+	return EXIT_SUCCESS;
 }
