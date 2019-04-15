@@ -29,16 +29,11 @@ typedef struct client_size
 {
 	size_t nom_size,
 		prenom_size,
-		date_de_naissance_size,
 		email_size,
 		adresse_size,
-		code_postale_size,
 		nom_ville_size,
 		complement_ad_size,
-		numero_mobile_size,
-		numero_fixe_size,
-		carte_id_size,
-		date_de_creation_size;
+		carte_id_size;
 
 } client_size_t;
 
@@ -63,10 +58,16 @@ typedef struct donnees_personnelles *Donnees_Personnelles;
 typedef struct client *Client;
 typedef union client_s Client_s;
 
-int isEqualClient(Client client1, Client client2);
-Client init_client_arg(char* uuid_client, int statut);
-Client_s init_client_s_arg(client_size_t alloc_size,char** uuid_client, char** titulaire);
+Donnees_Personnelles init_donnees_perso();
+
 Donnees_Personnelles init_donnees_perso_arg(client_size_t alloc_size, char sexe, char *nom, char *prenom, char *date_de_naissance, char *email, char* adresse, int code_postale, char* nom_ville, char* complement_ad, char* numero_mobile, char* numero_fixe, char* carte_id, char* date_de_creation);
-donnees_perso_t *equalAllClient(Client client1, Client client2);
+
+Client init_client();
+
+Client init_client_arg(char* uuid_client, int statut);
+
+Client_s init_client_s_arg(client_size_t alloc_size,char** uuid_client, char** titulaire);
+
+int isEqualClient(Client client1, Client client2);
 
 #endif

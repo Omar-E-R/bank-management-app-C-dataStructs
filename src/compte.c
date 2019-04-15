@@ -1,4 +1,16 @@
 #include "compte.h"
+
+struct client{
+
+	const char* uuid_client;
+	Login client_login;
+	int statut;
+
+	Donnees_Personnelles donnees_perso;
+
+	Compte comptes;
+
+};
 union client_s
 {
 	Client client;
@@ -34,23 +46,88 @@ struct compte
 	Client_s titulaire;
 };
 
-
-
-/* A client can and only have one shared (joint) bank account*/
-
-// int get_solde()
-// {
-// 	return Compte_Courant->solde;
-// }
-
-int get_operations()
+Rib init_rib_arg(size_t domiciliation_size, char *iban, char *code_bic, char *numero_compte, int indicatif_agence, char *domiciliation)
 {
-	/*
-		CODE HERE
-	*/
-	return 0;
+	Rib rib = (Rib)calloc(1, sizeof(struct rib));
+
+	rib->iban = (const char *)calloc(IBAN_SIZE, sizeof(char));
+	rib->code_bic = (const char *)calloc(CODE_BIC_SIZE, sizeof(char));
+	rib->numero_compte = (const char *)calloc(NUMERO_COMPTE_SIZE, sizeof(char));
+	rib->indicatif_agence = (const char *)calloc(INDICATIF_AGENCE_SIZE, sizeof(char));
+	rib->domiciliation_agence = (const char *)calloc(domiciliation_size, sizeof(char));
+
+	strcpy(rib->iban, iban);
+	strcpy(rib->code_bic, code_bic);
+	strcpy(rib->domiciliation_agence, domiciliation);
+	strcpy(rib->numero_compte, numero_compte);
+	sprintf(rib->indicatif_agence, "%05d", indicatif_agence);
+
+	return rib;
 }
 
+Rib init_rib()
+{
+	Rib rib = (Rib)calloc(1, sizeof(struct rib));
+
+	rib->iban = (const char *)calloc(IBAN_SIZE, sizeof(char));
+	rib->code_bic = (const char *)calloc(CODE_BIC_SIZE, sizeof(char));
+	rib->numero_compte = (const char *)calloc(NUMERO_COMPTE_SIZE, sizeof(char));
+	rib->indicatif_agence = (const char *)calloc(INDICATIF_AGENCE_SIZE, sizeof(char));
+	rib->domiciliation_agence = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
+
+	return rib;
+}
+
+Compte init_compte()
+{
+	Compte newCompte = (Compte)calloc(1, sizeof(struct compte));
+	newCompte->rib = (Rib)calloc(1, sizeof(struct rib));
+	newCompte->uuid_compte = (const char *)calloc(UUID_SIZE, sizeof(char));
+
+	newCompte->statut = UNINTIALIZED;
+	newCompte->nature_compte = UNINTIALIZED;
+	newCompte->type_compte = UNINTIALIZED;
+	newCompte->solde = UNINTIALIZED;
+	newCompte->next_compte = NULL;
+
+	return newCompte;
+}
+
+Compte init_compte_arg(char *uuid_compte, char *iban, int nature_compte, int type_compte, char *operations, Client_s titulaire)
+{
+	Compte newCompte = (Compte)calloc(1, sizeof(struct compte));
+	newCompte->rib = (Rib)calloc(1, sizeof(struct rib));
+	newCompte->rib->iban = (const char *)calloc(IBAN_SIZE, sizeof(char));
+	strcpy(newCompte->rib->iban, iban);
+
+	newCompte->uuid_compte = (const char *)calloc(UUID_SIZE, sizeof(char));
+	newCompte->operations = (const char *)calloc(UUID_SIZE, sizeof(char));
+
+	strcpy(newCompte->uuid_compte, uuid_compte);
+	strcpy(newCompte->operations, operations);
+
+	newCompte->nature_compte = nature_compte;
+	newCompte->type_compte = type_compte;
+	newCompte->titulaire = titulaire;
+
+	newCompte->next_compte = NULL;
+
+	return newCompte;
+}
+
+int isEqualCompte(Compte c1, Compte c2)
+{
+	if(c1==NULL || c2==NULL)
+	{
+		return EXIT_FAILURE;
+	}
+	if (strcmp(c1->uuid_compte, c2->uuid_compte)==0)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;
+}
+
+/*
 Compte popCompte_LIFO(Compte c)
 {
 	if (c == NULL || c->next_compte == NULL)
@@ -87,18 +164,13 @@ Compte getLastCompte(Compte c)
 	return getLastCompte(c->next_compte);
 
 }
-
+*/
 /* determine si les deux comptes designe le meme, i.e ont le meme code, i.e sont egaux */
-int isEqualCompte(Compte c1, Compte c2)
-{
-	if(strcmp(c1->uuid_compte, c2->uuid_compte))
-		return EXIT_SUCCESS;
-	else
-		return EXIT_FAILURE;
 
-}
 
 /* renvoie le compte parmis les "comptes" qui est de type "type" */
+
+/*
 Compte getCompte(Compte comptes, compte_t type)
 {
 	if(comptes==NULL)
@@ -112,11 +184,13 @@ Compte getCompte(Compte comptes, compte_t type)
 	else
 		return isTypeCompte(comptes->next_compte, type);
 }
-
+*/
+/*
 int compareComptes(Compte c1, Compte c2,  compte_element_t element)
 {
 	if(c1==NULL || c2==NULL)
 		return NULL;
+	compte_element_t elt=IBAN;
 
 	switch (element)
 	{
@@ -161,7 +235,6 @@ int compareComptes(Compte c1, Compte c2,  compte_element_t element)
 			break;
 
 		case RIB :
-			compte_element_t elt=IBAN;
 
 			while (elt <= DOMICILIATION && compareComptes(c1, c2, elt) == EXIT_SUCCESS)
 			{
@@ -185,6 +258,9 @@ int compareComptes(Compte c1, Compte c2,  compte_element_t element)
 	return EXIT_FAILURE;
 
 }
+
+*/
+/*
 int add_compte(Compte comptes, Compte c)
 {
 	Compte var = comptes;
@@ -204,6 +280,9 @@ int add_compte(Compte comptes, Compte c)
 	}
 	return EXIT_SUCCESS;
 }
+*/
+
+/*
 Compte containsCompte(Compte comptes, Compte var)
 {
 	if(comptes==NULL)
@@ -217,7 +296,8 @@ Compte containsCompte(Compte comptes, Compte var)
 
 	return NULL;
 }
-
+*/
+/*
 int add_Compte(Compte c, Compte newC)
 {
 	if (c==NULL || newC==NULL)
@@ -281,68 +361,11 @@ int addCompteJoint(Compte c1, Compte c2, Compte cJoint)
 
 
 }
-
-Compte init_compte()
-{
-	Compte newCompte = (Compte)calloc( 1, sizeof(struct compte) );
+*/
 
 
 
-	/* TYPE COMPTE */
-	newCompte->statut = UNINTIALIZED;
-	newCompte->nature_compte = UNINTIALIZED;
-	newCompte->type_compte = UNINTIALIZED;
-	/*-----------*/
-
-
-	newCompte->solde = UNINTIALIZED;
-
-	newCompte->uuid_compte = (const char *)calloc(UUID_SIZE, sizeof(char));
-
-	newCompte->rib=(Rib)calloc(1, sizeof(struct rib));
-	newCompte->next_compte=NULL;
-
-
-	return newCompte;
-}
-
-
-Compte init_compte_arg(char* uuid_compte, char* iban, int nature_compte, int type_compte, char* operations, Client_s titulaire)
-{
-	Compte newCompte = (Compte)calloc( 1, sizeof(struct compte) );
-
-	newCompte->uuid_compte = (const char *)calloc(UUID_SIZE, sizeof(char));
-	newCompte->operations = (const char *)calloc(UUID_SIZE, sizeof(char));
-
-	strcpy(newCompte->uuid_compte, uuid_compte);
-	strcpy(newCompte->operations, operations);
-
-	/* TYPE COMPTE */
-	newCompte->nature_compte = nature_compte;
-	newCompte->type_compte = type_compte;
-	/*-----------*/
-	newCompte->titulaire=titulaire;
-	newCompte->rib->iban = (const char *)calloc(IBAN_SIZE, sizeof(char));
-	newCompte->rib=(Rib)calloc(1, sizeof(struct rib));
-	strcpy(newCompte->rib->iban, iban);
-
-	newCompte->next_compte=NULL;
-
-
-	return newCompte;
-}
-
-Rib new_rib(const char *indicatif_agence, const char *domiciliation_agence, const char *code_bic)
-{
-	Rib newRib = (Rib)calloc(1, sizeof(struct rib));
-
-		newRib->iban = (const char *)calloc(IBAN_SIZE, sizeof(char));
-		newRib->code_bic = (const char *)calloc(CODE_BIC_SIZE, sizeof(char));
-		newRib->numero_compte = (const char *)calloc(NUMERO_COMPTE_SIZE, sizeof(char));
-		newRib->indicatif_agence = (const char *)calloc(INDICATIF_AGENCE_SIZE, sizeof(char));
-		newRib->domiciliation_agence = (const char *)calloc(DOMICILIATION_SIZE, sizeof(char));
-
-}
+/*
 
 Compte new_acc(Client_s client, Rib rib, float solde, compte_t joint, compte_t type)
 {
@@ -381,3 +404,4 @@ Compte new_acc(Client_s client, Rib rib, float solde, compte_t joint, compte_t t
 
 	return newCompte;
 }
+*/

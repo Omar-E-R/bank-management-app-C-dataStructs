@@ -9,27 +9,18 @@
 #include <time.h>
 #include <ctype.h>
 
+/* For uuid_generate() and uuid_unparse() */
+#include <uuid/uuid.h>
+
+#define lowercaseuuid true
+#define BANK_NUMBER "40305"
 
 extern int global_account_number;
 
 
-/* For uuid_generate() and uuid_unparse() */
-#include <uuid/uuid.h>
-
-
-
-#define BANK_NUMBER "40305"
-
 /* Uncomment to always generate capital UUIDs. */
 //#define capitaluuid true
 
-/* Uncomment to always generate lower-case UUIDs. */
-//#define lowercaseuuid true
-
-/*
- * Don't uncomment either if you don't care (the case of the letters
- * in the 'unparsed' UUID will depend on your system's locale).
- */
 
 int uuid_gen(const char* uuid);
 int* login_id_generator(int *code);

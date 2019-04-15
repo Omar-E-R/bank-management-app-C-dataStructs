@@ -123,9 +123,9 @@ Agence init_agence_arg(agence_size_t allocation_size,char *uuid_agence, char *co
 	Agence agence=(Agence)calloc(1, sizeof(struct agence));
 
 
-	agence->uuid_agence = (const char*)calloc(allocation_size.uuid_agence, sizeof(char));
-	agence->code_bic=(const char *) calloc(allocation_size.code_bic, sizeof(char));
-	agence->indicatif_agence = (const char *)calloc(allocation_size.indicatif_agence, sizeof(char));
+	agence->uuid_agence = (const char*)calloc(UUID_SIZE, sizeof(char));
+	agence->code_bic=(const char *) calloc(CODE_BIC_SIZE, sizeof(char));
+	agence->indicatif_agence = (const char *)calloc(INDICATIF_AGENCE_SIZE, sizeof(char));
 	agence->domiciliation_agence = (const char *)calloc(allocation_size.domiciliation_agence, sizeof(char));
 
 	strcpy(agence->uuid_agence, uuid_agence);
@@ -137,33 +137,6 @@ Agence init_agence_arg(agence_size_t allocation_size,char *uuid_agence, char *co
 	return agence;
 
 }
-Agence new_agence(const char* domiciliation, const char* uuid_ville)
-{
-	Agence agence=init_agence();
-
-	uuid_gen(agence->uuid_agence);
-
-	//agence->code_bic
-
-	indicatif_gen(agence->indicatif_agence, uuid_ville);
-
-	agence->domiciliation_agence = domiciliation;
-
-	return agence;
-
-}
-
-Conseiller new_conseiller(Donnees_Personnelles info_conseiller)
-{
-	Conseiller conseiller = init_conseiller();
-
-	uuid_gen(conseiller->uuid_conseiller);
-
-	conseiller->info_conseiller = info_conseiller;
-
-	return conseiller;
-}
-
 
 int isEqualConseiller(Conseiller employe1, Conseiller employe2)
 {
@@ -217,7 +190,7 @@ int addCompte(lCompte liste_compte, Compte compte)
 		}
 		if (var->next_compte == NULL)
 		{
-			var->next_compte = init_compte();
+			var->next_compte = init_liste_compte();
 		}
 		var = var->next_compte;
 	}
@@ -244,9 +217,41 @@ int addClient(lClient liste_client, Client client)
 		}
 		if (var->next_client == NULL)
 		{
-			var->next_client = init_client();
+			var->next_client = init_liste_client();
 		}
 		var = var->next_client;
 	}
 	return EXIT_SUCCESS;
 }
+
+
+
+/*
+Agence new_agence(const char* domiciliation, const char* uuid_ville)
+{
+	Agence agence=init_agence();
+
+	uuid_gen(agence->uuid_agence);
+
+	//agence->code_bic
+
+	indicatif_gen(agence->indicatif_agence, uuid_ville);
+
+	agence->domiciliation_agence = domiciliation;
+
+	return agence;
+
+}
+
+Conseiller new_conseiller(Donnees_Personnelles info_conseiller)
+{
+	Conseiller conseiller = init_conseiller();
+
+	uuid_gen(conseiller->uuid_conseiller);
+
+	conseiller->info_conseiller = info_conseiller;
+
+	return conseiller;
+}
+
+*/

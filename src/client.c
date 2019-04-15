@@ -45,9 +45,6 @@ union client_s
 };
 
 
-
-
-/* CREATES A NEW CLIENT STRUCT, ALLOCATES DYNAMIC MEMORY FOR IT AND IT INITIALIZE ITS PARAMETERS */
 Donnees_Personnelles init_donnees_perso()
 {
 	Donnees_Personnelles info_client = (Donnees_Personnelles)calloc(1, sizeof(struct donnees_personnelles));
@@ -87,7 +84,7 @@ Donnees_Personnelles init_donnees_perso_arg(client_size_t alloc_size, char sexe,
 
 	info_client->prenom = (const char *)calloc(alloc_size.prenom_size, sizeof(char));
 
-	info_client->date_de_naissance = (const char *)calloc(alloc_size.date_de_naissance_size, sizeof(char));
+	info_client->date_de_naissance = (const char *)calloc(DATE_DE_NAISSANCE_SIZE, sizeof(char));
 
 	info_client->email = (const char *)calloc(alloc_size.email_size, sizeof(char));
 
@@ -101,11 +98,11 @@ Donnees_Personnelles init_donnees_perso_arg(client_size_t alloc_size, char sexe,
 
 	info_client->complement_ad = (const char *)calloc(alloc_size.complement_ad_size, sizeof(char));
 
-	info_client->numero_mobile = (const char *)calloc(alloc_size.numero_mobile_size, sizeof(char));
+	info_client->numero_mobile = (const char *)calloc(NUMERO_MOBILE_SIZE, sizeof(char));
 
-	info_client->numero_fixe = (const char *)calloc(alloc_size.numero_fixe_size, sizeof(char));
+	info_client->numero_fixe = (const char *)calloc(NUMERO_MOBILE_SIZE, sizeof(char));
 	info_client->carte_identite = (const char *)calloc(alloc_size.carte_id_size, sizeof(char));
-	info_client->date_de_creation = (const char *)calloc(alloc_size.date_de_creation_size, sizeof(char));
+	info_client->date_de_creation = (const char *)calloc(NUMERO_FIXE_SIZE, sizeof(char));
 
 	strcpy(info_client->nom,nom );
 	strcpy(info_client->prenom,prenom );
@@ -124,27 +121,32 @@ Donnees_Personnelles init_donnees_perso_arg(client_size_t alloc_size, char sexe,
 }
 Client init_client()
 {
-    Client newClient=(Client)calloc(1,sizeof(struct client));
+    Client client=(Client)calloc(1,sizeof(struct client));
 
-    newClient->uuid_client = (const char *)calloc(UUID_SIZE, sizeof(char));
+    client->uuid_client = (const char *)calloc(UUID_SIZE, sizeof(char));
 
-    newClient->statut=UNINTIALIZED;
-
-    return newClient;
+    client->statut=UNINTIALIZED;
+	client->comptes = NULL;
+	client->client_login = NULL;
+	return client;
 
 }
 Client init_client_arg(char* uuid_client, int statut)
 {
-    Client newClient=(Client)calloc(1,sizeof(struct client));
+    Client client=(Client)calloc(1,sizeof(struct client));
 
-    newClient->uuid_client = (const char *)calloc(UUID_SIZE, sizeof(char));
+    client->uuid_client = (const char *)calloc(UUID_SIZE, sizeof(char));
 
-    newClient->statut=statut;
+    client->statut=statut;
 
-	strcpy(newClient, uuid_client);
+	strcpy(client->uuid_client, uuid_client);
+
+	client->comptes=NULL;
+	client->client_login=NULL;
 
 
-    return newClient;
+
+    return client;
 
 }
 Client_s init_client_s_arg(client_size_t alloc_size,char** uuid_client, char** titulaire)
@@ -186,6 +188,8 @@ Client_s init_client_s_arg(client_size_t alloc_size,char** uuid_client, char** t
 
 int isEqualClient(Client client1, Client client2)
 {
+	if(client1==NULL || client2==NULL)
+		return EXIT_FAILURE;
 	if(strcmp(client1->uuid_client, client2->uuid_client))
 		return EXIT_SUCCESS;
 	else
@@ -198,6 +202,7 @@ int isEqualClient(Client client1, Client client2)
 	CHECKS IF THE TWO CLIENTS HAVE THE SAME VALUE OF THE "ELEMENT" (PASSED AS ARGUMENT)
 
 */
+/*
 donnees_perso_t compareClients(Client client1, Client client2, donnees_perso_t element)
 {
 
@@ -251,74 +256,76 @@ donnees_perso_t compareClients(Client client1, Client client2, donnees_perso_t e
 	return EXIT_FAILURE;
 
 }
-
+*/
 /* CHECKS IF THE TWO CLIENTS HAVE ANY SAME VALUE AND RETURNS THE TYPES OF SIMILARITIES IN AN ARRAY OF "donnees_perso_t" */
-// donnees_perso_t* isEqualAllClient(Client client1, Client client2)
-// {
-//     /*
-//         "resultat[]" is an array of "donnees_perso_t" that will contain in order the type of element in case of equalities or NULL_ in case of none.
 
-//     */
-//     donnees_perso_t resultat[13];
+/*
+donnees_perso_t* isEqualAllClient(Client client1, Client client2)
+{
 
-//     donnees_perso_t element;
-
-//     int i=1, indicator=0, danger=0;
-
-//     //SEARCH WILL START WITH "NOM" and ENDS WITH "NUMERO_FIXE" BEFORE REACHING NULL_ ELEMENT
-//     for(element=NOM; element<NULL_; element++,i++)
-//     {
-//         if((resultat[i]=compareClients(client1, client2, element))!=NULL_)
-//         {
-//             indicator++;
-
-//             if (resultat[i] >= NOM && resultat[i] <= EMAIL)
-//             {
-//                 if (resultat[i] == EMAIL)
-//                 {
-//                     danger+=3;
-//                 }else
-//                 {
-//                     danger++;
-//                 }
+        "resultat[]" is an array of "donnees_perso_t" that will contain in order the type of element in case of equalities or NULL_ in case of none.
 
 
-//             }
-//         }
+    donnees_perso_t resultat[13];
 
-//     }
-//     // sizeof(resultat)=13: 12 of elements each client have
-//     // and the first element of the array is an indicator if there was many equalities or not i.e if (indicator != 0)
-//     //AN indicator bigger than 2 means there is a possible collusion between the two client
-//     if (indicator < 3)
-//     {
-//         resultat[0]=NULL_;
-//     }else
-//     {
-//     //AN "danger" indicator bigger than 2 means there is a collusion between the two client at least by "email"
-//         if(danger >= 3)
-//             resultat[0] = COLLUSION;
-//         else
-//         {
-//             resultat[0] = NOT_NULL_;
-//         }
-//     }
+    donnees_perso_t element;
 
-//     return resultat;
+    int i=1, indicator=0, danger=0;
+
+    //SEARCH WILL START WITH "NOM" and ENDS WITH "NUMERO_FIXE" BEFORE REACHING NULL_ ELEMENT
+    for(element=NOM; element<NULL_; element++,i++)
+    {
+        if((resultat[i]=compareClients(client1, client2, element))!=NULL_)
+        {
+            indicator++;
+
+            if (resultat[i] >= NOM && resultat[i] <= EMAIL)
+            {
+                if (resultat[i] == EMAIL)
+                {
+                    danger+=3;
+                }else
+                {
+                    danger++;
+                }
 
 
-// }
+            }
+        }
 
-/* CREATES A NEW CLIENT STRUCT USING THE "info_client" DATA*/
+    }
+    // sizeof(resultat)=13: 12 of elements each client have
+    // and the first element of the array is an indicator if there was many equalities or not i.e if (indicator != 0)
+    //AN indicator bigger than 2 means there is a possible collusion between the two client
+    if (indicator < 3)
+    {
+        resultat[0]=NULL_;
+    }else
+    {
+    //AN "danger" indicator bigger than 2 means there is a collusion between the two client at least by "email"
+        if(danger >= 3)
+            resultat[0] = COLLUSION;
+        else
+        {
+            resultat[0] = NOT_NULL_;
+        }
+    }
+
+    return resultat;
+
+
+}
+*/
+/* CREATES A NEW CLIENT STRUCT USING THE "info_client" DATA
 Client new_client(Donnees_Personnelles info_client)
 {
-	Client newClient=init_client();
+	Client client=init_client();
 
-	newClient->donnees_perso=info_client;
+	client->donnees_perso=info_client;
 
-	uuid_gen(newClient->uuid_client);
+	uuid_gen(client->uuid_client);
 
-	return newClient;
+	return client;
 
 }
 
@@ -346,3 +353,4 @@ Client_s new_clients(Client client1, Client client2)
 	}
 
 }
+*/

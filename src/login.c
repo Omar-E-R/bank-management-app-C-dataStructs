@@ -1,8 +1,14 @@
+
 #include"login.h"
 #define ENCRYPTION_KEY 32534
 #define USERNAME_SIZE 20
 #define PASSWORD_SIZE 50
 
+
+int _getrandom(void *buf, size_t buflen, unsigned int flags)
+{
+    return (int)syscall(SYS_getrandom, buf, buflen, flags);
+}
 struct login
 {
     const char* login_id;
@@ -16,6 +22,181 @@ struct login_admin
     const char* pin;
 
 };
+
+Login init_login()
+{
+    Login login = (Login)calloc(1, sizeof(struct login));
+    login->login_id = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
+    login->login_key = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
+
+    return login;
+}
+Login init_login_arg(login_size_t alloc_size, char *id, char *key)
+{
+    Login login = (Login)calloc(1, sizeof(struct login));
+
+    login->login_id = (const char *)calloc(alloc_size.id, sizeof(char));
+    login->login_key = (const char *)calloc(alloc_size.key, sizeof(char));
+
+    strcpy(login->login_id, id);
+    strcpy(login->login_key, key);
+
+    return login;
+}
+
+Login_Admin init_login_admin()
+{
+    Login_Admin login_admin = (Login_Admin)calloc(1, sizeof(struct login_admin));
+
+    login_admin->login_id = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
+    login_admin->pin = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
+    login_admin->code_agence = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
+
+    return login_admin;
+}
+
+int encrypt_login_pass(Login user)
+{
+
+    unsigned char randbytes[16]; //unpredicted bytes
+    char salt[20];
+    const char *const saltchars =
+        "./0123456789ABCDEFGHIJKLMNOPQRST"
+        "UVWXYZabcdefghijklmnopqrstuvwxyz";
+    char *hash;
+    int i;
+
+    /* Retrieve 16 unpredictable bytes from the operating system using getentropy. */
+    if (_getrandom(randbytes, sizeof randbytes, 0))
+    {
+        perror("getentropy");
+        return EXIT_FAILURE;
+    }
+
+    /* Use them to fill in the salt string. */
+    salt[0] = '$';
+    salt[1] = '6'; /* SHA-2-512 */
+    salt[2] = '$';
+
+    for (i = 0; i < 16; i++)
+        salt[3 + i] = saltchars[randbytes[i] & 0x3f];
+    salt[3 + i] = '\0';
+
+    /* Read in the userâ€™s passphrase and hash it. */
+    hash = crypt(user->login_key, salt);
+    if (!hash || hash[0] == '*')
+    {
+        perror("crypt");
+        return EXIT_FAILURE;
+    }
+
+    /* modify the login struct. */
+
+    strcpy(user->login_key, hash);
+
+    /* clearing the memory used to store the password */
+
+    memset(&hash[0], 0, strlen(hash));
+
+    return EXIT_SUCCESS;
+}
+
+int encrypt_code(const char *hash_code)
+{
+    char key[64];
+
+    char buf[64];
+
+    size_t length = strlen(hash_code);
+
+    char *txt = malloc((length + 1) * sizeof(char));
+
+    int i, j;
+
+    for (i = 0; i < 64; i++)
+    {
+        key[i] = rand() & 1;
+    }
+
+    for (i = 0; i < length; i++)
+    {
+        for (j = 0; j < length; j++)
+        {
+            buf[i * length + j] = hash_code[i] >> j & 1;
+        }
+        setkey(key);
+    }
+    // printf("Before encrypting: %s\n", hash_code);
+
+    encrypt(buf, 0);
+    for (i = 0; i < length; i++)
+    {
+        for (j = 0, txt[i] = '\0'; j < length; j++)
+        {
+            txt[i] |= buf[i * length + j] << j;
+        }
+        txt[length] = '\0';
+    }
+    // printf("After encrypting:  %s\n", txt);
+
+    strcpy(hash_code, txt);
+
+    exit(EXIT_SUCCESS);
+}
+
+
+
+/////////////////////////
+static int decrypt_code(const char *hash_code)
+{
+    char key[64];
+
+    char buf[64];
+
+    size_t length = strlen(hash_code);
+
+    char *txt = malloc((length + 1) * sizeof(char));
+
+    int i, j;
+
+    for (i = 0; i < 64; i++)
+    {
+        key[i] = rand() & 1;
+    }
+
+    for (i = 0; i < length; i++)
+    {
+        for (j = 0; j < length; j++)
+        {
+            buf[i * length + j] = hash_code[i] >> j & 1;
+        }
+        setkey(key);
+    }
+    printf("Before encrypting: %s\n", hash_code);
+
+    encrypt(buf, 0);
+    for (i = 0; i < length; i++)
+    {
+        for (j = 0, txt[i] = '\0'; j < length; j++)
+        {
+            txt[i] |= buf[i * length + j] << j;
+        }
+        txt[length] = '\0';
+    }
+    printf("After encrypting:  %s\n", txt);
+
+    encrypt(buf, 1);
+    for (i = 0; i < length; i++)
+    {
+        for (j = 0, txt[i] = '\0'; j < length; j++)
+        {
+            txt[i] |= buf[i * length + j] << j;
+        }
+        txt[length] = '\0';
+    }
+    printf("After decrypting:  %s\n", txt);
+    exit(EXIT_SUCCESS);
+}
 
 /*
 implementation des fonctions de identifications
@@ -62,178 +243,3 @@ et donc trouver apres le compte du client et valider si le login_key prive corre
 
 //     identifier=decrypt_ville(login);
 // }
-
-Login init_login()
-{
-	Login login=(const char*)calloc(1,sizeof(struct login));
-	login->login_id=(const char*)calloc(LOGIN_ID_SIZE,sizeof(char));
-	login->login_key=(const char *) calloc(LOGIN_ID_SIZE, sizeof(char));
-
-	return login;
-}
-Login init_login_arg(login_size_t alloc_size, char* id, char* key)
-{
-	Login login=(const char*)calloc(1,sizeof(struct login));
-
-	login->login_id=(const char*)calloc(alloc_size.id,sizeof(char));
-	login->login_key=(const char *) calloc(alloc_size.key, sizeof(char));
-
-	strcpy(login->login_id, id);
-	strcpy(login->login_key, key);
-
-	return login;
-}
-
-
-Login init_login_admin()
-{
-	Login_Admin login_admin = (const char *)calloc(1, sizeof(struct login_admin));
-
-	login_admin->login_id = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
-	login_admin->pin = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
-	login_admin->code_agence = (const char *)calloc(LOGIN_ID_SIZE, sizeof(char));
-
-	return login_admin;
-}
-
-
-int encrypt_login_pass(Login user)
-{
-
-    unsigned char randbytes[16];//unpredicted bytes
-    char salt[20];
-    const char *const saltchars =
-        "./0123456789ABCDEFGHIJKLMNOPQRST"
-        "UVWXYZabcdefghijklmnopqrstuvwxyz";
-    char *hash;
-    int i;
-
-    /* Retrieve 16 unpredictable bytes from the operating system using getentropy. */
-    if (getentropy(randbytes, sizeof randbytes))
-    {
-        perror("getentropy");
-        return EXIT_FAILURE;
-    }
-
-    /* Use them to fill in the salt string. */
-    salt[0] = '$';
-    salt[1] = '6'; /* SHA-2-512 */
-    salt[2] = '$';
-
-    for (i = 0; i < 16; i++)
-        salt[3 + i] = saltchars[randbytes[i] & 0x3f];
-    salt[3 + i] = '\0';
-
-    /* Read in the userâ€™s passphrase and hash it. */
-    hash = crypt(user->login_key, salt);
-    if (!hash || hash[0] == '*')
-    {
-        perror("crypt");
-        return EXIT_FAILURE;
-    }
-
-    /* modify the login struct. */
-
-    strcpy(user->login_key, hash);
-
-    /* clearing the memory used to store the password */
-
-    memset(&hash[0], 0, sizeof(hash));
-
-
-    return EXIT_SUCCESS;
-}
-
-int encrypt_code(const char* hash_code)
-{
-    char key[64];
-
-    char buf[64];
-
-	size_t length=strlen(hash_code);
-
-    char *txt= malloc((length+1) *sizeof(char));
-
-    int i, j;
-
-    for (i = 0; i < 64; i++)
-    {
-        key[i] = rand() & 1;
-    }
-
-    for (i = 0; i < length; i++)
-    {
-        for (j = 0; j < length; j++)
-        {
-            buf[i * length + j] = hash_code[i] >> j & 1;
-        }
-        setkey(key);
-    }
-    // printf("Before encrypting: %s\n", hash_code);
-
-    encrypt(buf, 0);
-    for (i = 0; i < length; i++)
-    {
-        for (j = 0, txt[i] = '\0'; j < length; j++)
-        {
-            txt[i] |= buf[i * length + j] << j;
-        }
-        txt[length] = '\0';
-    }
-    // printf("After encrypting:  %s\n", txt);
-
-	strcpy(hash_code, txt);
-
-    exit(EXIT_SUCCESS);
-}
-/////////////////////////
-int decrypt_code(const char* hash_code)
-{
-    char key[64];
-
-    char buf[64];
-
-	size_t length=strlen(hash_code);
-
-    char *txt= malloc((length+1) *sizeof(char));
-
-    int i, j;
-
-    for (i = 0; i < 64; i++)
-    {
-        key[i] = rand() & 1;
-    }
-
-    for (i = 0; i < length; i++)
-    {
-        for (j = 0; j < length; j++)
-        {
-            buf[i * length + j] = hash_code[i] >> j & 1;
-        }
-        setkey(key);
-    }
-    printf("Before encrypting: %s\n", hash_code);
-
-    encrypt(buf, 0);
-    for (i = 0; i < length; i++)
-    {
-        for (j = 0, txt[i] = '\0'; j < length; j++)
-        {
-            txt[i] |= buf[i * length + j] << j;
-        }
-        txt[length] = '\0';
-    }
-    printf("After encrypting:  %s\n", txt);
-
- encrypt(buf, 1);
-    for (i = 0; i < length; i++)
-    {
-        for (j = 0, txt[i] = '\0'; j < length; j++)
-        {
-            txt[i] |= buf[i * length + j] << j;
-        }
-        txt[length] = '\0';
-    }
-    printf("After decrypting:  %s\n", txt);
-    exit(EXIT_SUCCESS);
-}

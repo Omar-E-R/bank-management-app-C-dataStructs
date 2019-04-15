@@ -17,13 +17,6 @@ typedef struct ville_size
 #define BASIC_DATA "basic_data.json"
 
 
-// typedef enum
-// {
-// 	Toulouse=31000
-// 	//on peut en rajouter d'autres
-// }Nom_Ville;
-
-
 typedef struct liste_agence *lAgence;
 
 typedef struct ville *Ville;
@@ -32,17 +25,26 @@ typedef struct data *lData;
 
 typedef struct admin *Admin;
 
-Admin new_admin();
-Admin init_admin();
+
+
 lAgence init_liste_agence();
+
 Ville init_ville();
-Ville new_ville(const char* nom_ville, const char* code_postale);
-lData init_data();
+
 Ville init_ville_arg(ville_size_t allocation_size,char* uuid_ville,int code_postale,char* nom_ville,char* hash_code);
-int addAgence(lAgence liste_agence, Agence agence);
+
+lData init_data();
+
+Admin init_admin();
+
 int isEqualVille(Ville ville1, Ville ville2);
+
 int isEqualAdmin(Admin admin1, Admin admin2);
+
+int addAgence(lAgence liste_agence, Agence agence);
+
 int addVille(lData liste_ville, Ville ville);
+
 int addAdmin(Admin lAdmin, Admin admin);
 
 #endif

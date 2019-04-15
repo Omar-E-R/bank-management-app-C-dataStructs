@@ -15,7 +15,7 @@ enum boolean
 
 typedef struct arbre *Arbre;
 
-struct arbre
+static struct arbre
 {
 	int valeur;
 	enum boolean parcouru;
@@ -294,11 +294,10 @@ int uuid_gen(const char* uuid)
      */
 	uuid_generate_random(binuuid);
 
-	// /*
-    //  * uuid_unparse() doesn't allocate memory for itself, so do that with
-    //  * malloc(). 37 is the length of a UUID (36 characters), plus '\0'.
-    //  */
-	// const char *uuid = (char*)calloc(37, sizeof(char));
+	/*
+     * uuid_unparse() doesn't allocate memory for itself. 37 is the length of a UUID (36 characters), plus '\0'.
+     */
+
 
 #ifdef capitaluuid
 	/* Produces a UUID string at uuid consisting of capital letters. */

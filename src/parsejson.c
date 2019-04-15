@@ -1,5 +1,7 @@
 #include"parsejson.h"
 // #define WORKSPACE
+
+
 struct rib
 {
 	const char* iban;
@@ -227,26 +229,19 @@ Rib parse_rib_struct(json_t *rib_object, size_t flags)
 	json_error_t error;
 
 	char *iban, *code_bic, *numero_compte, *domiciliation;
-	int res, iban_size, code_bic_size, numero_compte_size, indicatif_agence, domiciliation_size;
+	int res, iban_size, code_bic_size, indicatif_agence, domiciliation_size;
 
-	res = json_unpack_ex(rib_object, &error, flags, "{s:s%, s:s%, s:s%, s:i, s:s%}", "iban", &iban, &iban_size, "code_bic", &code_bic, &code_bic_size, "numero_compte", &numero_compte, &numero_compte_size, "indicatif_agence", &indicatif_agence, "domiciliation_agence", &domiciliation, &domiciliation_size);
+	res = json_unpack_ex(rib_object, &error, flags, "{s:s%, s:s%, s:s, s:i, s:s%}", "iban", &iban, &iban_size, "code_bic", &code_bic, &code_bic_size, "numero_compte", &numero_compte, "indicatif_agence", &indicatif_agence, "domiciliation_agence", &domiciliation, &domiciliation_size);
 
-	if( res ||  iban_size != IBAN_SIZE || code_bic_size != CODE_BIC_SIZE || numero_compte_size > NUMERO_COMPTE_SIZE || indicatif_agence > 99999 || domiciliation_size > DOMICILIATION_SIZE )
+	if( res ||  iban_size != IBAN_SIZE || code_bic_size != CODE_BIC_SIZE || indicatif_agence > 99999 || domiciliation_size > DOMICILIATION_SIZE )
 	{
 		json_decref(rib_object);
 		fail("json_unpack object Rib: Expected a string but JSON key value is not or JSON string value exceeded length expected or incompatible JSON key value encountered");
 		fprintf(stderr,"Error type: %s %s, at line: %d, column: %d\n",error.source, error.text, error.line, error.column);
 		return NULL;
 	}
-	rib_size_t alloc_size;
-	alloc_size.iban_size= iban_size+1;
-	alloc_size.numero_compte_size=numero_compte_size+1;
-	alloc_size.code_bic_size=code_bic_size+1;
-	alloc_size.domiciliation_size=domiciliation_size+1;
 
-
-	return init_rib_arg(alloc_size, iban, code_bic, numero_compte, indicatif_agence, domiciliation);
-
+	return init_rib_arg(domiciliation_size, iban, code_bic, numero_compte, indicatif_agence, domiciliation);
 }
 
 char* parse_operations_csv(json_t *operations_object)
@@ -365,13 +360,9 @@ Donnees_Personnelles parse_donnees_perso_struct(json_t *donnees_object, size_t f
 	alloc_size.adresse_size =adresse_size +1;
 	alloc_size.carte_id_size = carte_id_size +1;
 	alloc_size.complement_ad_size = complement_ad_size +1;
-	alloc_size.date_de_creation_size =date_de_creation_size +1 ;
-	alloc_size.date_de_naissance_size = date_de_naissance_size +1 ;
 	alloc_size.email_size=email_size +1;
 	alloc_size.nom_size = nom_size +1;
 	alloc_size.nom_ville_size = nom_ville_size +1;
-	alloc_size.numero_fixe_size = numero_fixe_size +1;
-	alloc_size.numero_mobile_size = numero_mobile_size +1;
 	alloc_size.prenom_size = prenom_size  +1;
 
 	return init_donnees_perso_arg(alloc_size, sexe, nom, prenom, date_de_naissance, email, adresse, code_postale, nom_ville, complement_ad, numero_mobile, numero_fixe, carte_id, date_de_creation);
@@ -468,8 +459,6 @@ Agence parse_agence_struct(json_t *agence_object, size_t flags)
 
 	agence_size_t alloc_size;
 
-	alloc_size.uuid_agence=uuid_agence_size + 1;
-	alloc_size.code_bic=code_bic_size + 1;
 	alloc_size.domiciliation_agence=domiciliation_agence_size + 1;
 	alloc_size.hash_code=hash_code_size + 1;
 

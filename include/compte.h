@@ -18,11 +18,6 @@ enum allocation_size_compte
 	OPERATIONS_SIZE=36
 };
 
-typedef struct rib_size
-{
-	size_t iban_size, code_bic_size, numero_compte_size, indicatif_agence_size, domiciliation_size;
-}rib_size_t;
-
 typedef enum
 {
 	UNINTIALIZED,
@@ -58,10 +53,9 @@ typedef struct rib *Rib;
 
 typedef struct compte *Compte;
 typedef union client_s Client_s;
-int isEqualCompte(Compte c1, Compte c2);
-Compte init_compte();
-int add_compte(Compte comptes, Compte c);
 Rib init_rib();
-Rib init_rib_arg(rib_size_t alloc_size, char* iban, char* code_bic, char* numero_compte, int indicatif_agence, char* domiciliation);
-Compte init_compte_arg(char* uuid_compte, char* iban, int nature_compte, int type_compte, char* operations, Client_s titulaire);
+Rib init_rib_arg(size_t domiciliation_size, char *iban, char *code_bic, char *numero_compte, int indicatif_agence, char *domiciliation);
+Compte init_compte();
+Compte init_compte_arg(char *uuid_compte, char *iban, int nature_compte, int type_compte, char *operations, Client_s titulaire);
+int isEqualCompte(Compte c1, Compte c2);
 #endif

@@ -35,6 +35,25 @@ struct admin
 
 };
 
+lAgence init_liste_agence()
+{
+	lAgence liste_agence = (lAgence)calloc(1, sizeof(struct liste_agence));
+
+	return liste_agence;
+}
+
+Ville init_ville()
+{
+	Ville ville = (Ville)calloc(1, sizeof(struct ville));
+
+	ville->uuid_ville = (const char *)calloc(UUID_SIZE, sizeof(char));
+	ville->code_postale = (const char *)calloc(CODE_POSTALE_SIZE, sizeof(char));
+	ville->nom_ville = (const char *)calloc(NOM_VILLE_SIZE, sizeof(char));
+	ville->hash_code = (const char *)calloc(HASH_CODE_SIZE, sizeof(char));
+
+	return ville;
+}
+
 Ville init_ville_arg(ville_size_t allocation_size,char* uuid_ville,int code_postale,char* nom_ville,char* hash_code)
 {
 	Ville ville = (Ville)calloc(1, sizeof(struct ville));
@@ -56,21 +75,6 @@ Ville init_ville_arg(ville_size_t allocation_size,char* uuid_ville,int code_post
 	return ville;
 }
 
-
-Ville init_ville()
-{
-	Ville ville = (Ville)calloc(1, sizeof(struct ville));
-
-	ville->uuid_ville = (const char *)calloc(UUID_SIZE, sizeof(char));
-	ville->code_postale = (const char *)calloc(CODE_POSTALE_SIZE, sizeof(char));
-	ville->nom_ville = (const char *)calloc(NOM_VILLE_SIZE, sizeof(char));
-	ville->hash_code = (const char *)calloc(HASH_CODE_SIZE, sizeof(char));
-
-	return ville;
-}
-
-
-
 lData init_data()
 {
 	lData data = (lData)calloc(1, sizeof(struct data));
@@ -90,33 +94,19 @@ Admin init_admin()
 	return admin;
 }
 
-Admin new_admin()
+int isEqualVille(Ville ville1, Ville ville2)
 {
-	Admin admin = init_admin();
-
-	uuid_gen(admin->uuid_admin);
-
-	return admin;
-}
-lAgence init_liste_agence()
-{
-	lAgence liste_agence=(lAgence)calloc(1, sizeof(struct liste_agence));
-
-	return liste_agence;
-
-
-}
-Ville new_ville(const char* nom_ville, const char* code_postale)
-{
-	Ville ville = init_ville();
-
-	uuid_gen(ville->uuid_ville);
-	strcpy(ville->code_postale, code_postale);
-	strcpy(ville->nom_ville, nom_ville);
-
-	return ville;
+	if (strcmp(ville1->uuid_ville, ville2->uuid_ville) == 0 && strcmp(ville1->code_postale, ville2->code_postale) == 0 && strcmp(ville1->nom_ville, ville2->nom_ville) == 0 && strcmp(ville1->hash_code, ville2->hash_code) == 0)
+		return EXIT_SUCCESS;
+	return EXIT_FAILURE;
 }
 
+int isEqualAdmin(Admin admin1, Admin admin2)
+{
+	if (strcmp(admin1->uuid_admin, admin2->uuid_admin))
+		return EXIT_SUCCESS;
+	return EXIT_FAILURE;
+}
 
 int addAgence(lAgence liste_agence, Agence agence)
 {
@@ -138,25 +128,12 @@ int addAgence(lAgence liste_agence, Agence agence)
 		}
 		if(var->next_agence==NULL)
 		{
-			var->next_agence= init_agence();
+			var->next_agence= init_liste_agence();
 		}
 		var=var->next_agence;
 
 	}
 	return EXIT_SUCCESS;
-}
-
-int isEqualVille(Ville ville1, Ville ville2)
-{
-	if (strcmp(ville1->uuid_ville, ville2->uuid_ville) == 0 && strcmp(ville1->code_postale, ville2->code_postale) == 0 && strcmp(ville1->nom_ville, ville2->nom_ville) == 0 && strcmp(ville1->hash_code, ville2->hash_code) == 0)
-		return EXIT_SUCCESS;
-	return EXIT_FAILURE;
-}
-int isEqualAdmin(Admin admin1, Admin admin2)
-{
-	if (strcmp(admin1->uuid_admin, admin2->uuid_admin))
-		return EXIT_SUCCESS;
-	return EXIT_FAILURE;
 }
 
 int addVille(lData liste_ville, Ville ville)
@@ -167,7 +144,7 @@ int addVille(lData liste_ville, Ville ville)
 	{
 		if(var->ville!=NULL)
 		{
-			if (isEqualAgence((var->ville), ville)==EXIT_SUCCESS)
+			if (isEqualVille(var->ville, ville)==EXIT_SUCCESS)
 			{
 				return EXIT_FAILURE;
 			}
@@ -186,6 +163,7 @@ int addVille(lData liste_ville, Ville ville)
 	}
 	return EXIT_SUCCESS;
 }
+
 int addAdmin(Admin lAdmin, Admin admin)
 {
 	Admin var = lAdmin;
@@ -193,7 +171,7 @@ int addAdmin(Admin lAdmin, Admin admin)
 	while (var!=NULL)
 	{
 
-		if (isEqualAgence(var, admin)==EXIT_SUCCESS)
+		if (isEqualAdmin(var, admin)==EXIT_SUCCESS)
 		{
 			return EXIT_FAILURE;
 		}
@@ -207,3 +185,28 @@ int addAdmin(Admin lAdmin, Admin admin)
 	}
 	return EXIT_SUCCESS;
 }
+
+
+
+/*
+Admin new_admin()
+{
+	Admin admin = init_admin();
+
+	uuid_gen(admin->uuid_admin);
+
+	return admin;
+}
+
+Ville new_ville(const char *nom_ville, const char *code_postale)
+{
+	Ville ville = init_ville();
+
+	uuid_gen(ville->uuid_ville);
+	strcpy(ville->code_postale, code_postale);
+	strcpy(ville->nom_ville, nom_ville);
+
+	return ville;
+}
+
+*/

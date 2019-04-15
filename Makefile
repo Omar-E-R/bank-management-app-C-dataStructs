@@ -15,9 +15,9 @@ TARGET := bankmanagment.so
 
 CC := gcc
 
-CFLAGS := -Wall -ggdb -funsigned-char
+CFLAGS := -Wall -ggdb  -ljansson -lcrypt -luuid
 
-LFLAGS :=-I$(HDRDIR) -fPIC
+LFLAGS :=-I$(HDRDIR)
 
 
 
@@ -26,7 +26,7 @@ all: $(LIBDIR)/$(TARGET)
 
 
 $(LIBDIR)/$(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) $(LFLAGS) -pie $^ -o $@ -Wl,-E
+	$(CC) $(CFLAGS) $(LFLAGS) $^ -o $@
 
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDES)
