@@ -1,15 +1,15 @@
 #ifndef PARSEJSON_H
 #define PARSEJSON_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <jansson.h>
 #include <assert.h>
-
-#include"ville.h"
-#include"client.h"
+#include <uuid/uuid.h>
 
 
+#define ADMIN_JSON_FILE "admin.json"
 
 #define failhdr fprintf(stderr, "%s:%d: ", __FILE__, __LINE__)
 
@@ -20,7 +20,6 @@
 		fprintf(stderr, "%s\n", msg); \
 		exit(EXIT_FAILURE);                      \
 	} while (0)
-
 
 
 Rib parse_rib_struct(json_t *rib_object, size_t flags);
@@ -39,17 +38,17 @@ Conseiller parse_conseiller_struct(json_t *conseiller_object, size_t flags);
 
 Agence parse_agence_struct(json_t *agence_object, size_t flags);
 
-Ville parse_ville_struct(json_t *ville_object);
+departement parse_departement_struct(json_t *departement_object);
 
 int parse_valid_basic_data(const char* basic_data_filename, lData basic_data);
 
 void** login_id_parsing(const char* path, Agence agence, Client client, Conseiller conseiller);
 
-int parse_ville_data(Ville ville);
+int parse_departement_data(departement departement);
 
 int parse_agence_data(Agence agence);
 
-int login_key_parsing(Login login, Client client, Conseiller conseiller, Ville ville, Agence agence, int option);
+int login_key_parsing(Login login, Client client, Conseiller conseiller, departement departement, Agence agence, int option);
 
 int parse_compte_data(Compte compte);
 
@@ -63,9 +62,7 @@ int dump_compte_data(Compte compte);
 
 int dump_client_data(Client client);
 
-int dump_agence_data(Client client);
-
-int dump_basic_data(Client client);
-
+int dump_agence_data(Agence agence);
+int dump_basic_data(lData data);
 
 #endif

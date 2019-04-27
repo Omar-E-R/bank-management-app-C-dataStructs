@@ -1,128 +1,8 @@
 #include"parsejson.h"
-// #define WORKSPACE
+#define WORKSPACE
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
 
-
-struct rib
-{
-	const char* iban;
-	const char* code_bic;
-	const char* numero_compte;
-	const char* indicatif_agence;
-	const char* domiciliation_agence;
-
-};
-union client_s
-{
-	Client client;
-
-	Client clients[2];
-
-};
-struct compte
-{
-	const char* uuid_compte;
-
-	compte_t statut; //compte supprime ? i.e actif ou non actif
-	compte_t nature_compte;
-	compte_t type_compte;//LIVRET...
-
-	double solde;
-
-	const char *operations;//A FILENAME OR MAYBE I WILL CHANGE IT TO A FILE POINTER
-
-	Rib rib;
-
-	Compte next_compte;
-
-	Client_s titulaire;
-};
-
-struct client{
-
-	const char* uuid_client;
-	Login client_login;
-	int statut;
-
-	Donnees_Personnelles donnees_perso;
-
-	Compte comptes;
-
-};
-struct conseiller
-{
-	const char *uuid_conseiller;
-	int statut;
-
-	Donnees_Personnelles info_conseiller;
-	Login login_conseiller;
-
-};
-struct agence
-{
-	const char* uuid_agence;
-
-	const char *code_bic;
-	const char *indicatif_agence;
-	const char *domiciliation_agence;
-	const char *hash_code;
-
-	lCompte liste_compte;
-
-	lClient liste_client;
-
-	lConseiller liste_conseiller;
-
-};
-struct login
-{
-    const char* login_id;
-    const char* login_key;
-
-};
-struct liste_compte
-{
-	Compte compte;
-
-	lCompte next_compte;
-
-};
-struct liste_client
-{
-	Client client;
-	lClient next_client;
-
-};
-struct liste_conseiller
-{
-	Conseiller conseiller;
-
-	lConseiller next_conseiller;
-};
-struct liste_agence
-{
-	Agence agence;
-	lAgence next_agence;
-};
-struct ville
-{
-	const char *uuid_ville;
-
-	const char* nom_ville;
-
-	const char *code_postale;
-
-	const char *hash_code;
-
-	lAgence liste_agences;
-
-};
-struct data
-{
-	Ville ville;
-
-	lData next_ville;
-
-};
 #ifdef WORKSPACE
 
 static  void *guaranteed_memset(void *v,int c,size_t n)
@@ -342,13 +222,13 @@ Donnees_Personnelles parse_donnees_perso_struct(json_t *donnees_object, size_t f
 {
 	json_error_t error;
 
-	char *nom, *prenom, sexe, *date_de_naissance, *email, *adresse, *nom_ville, *complement_ad, *numero_mobile, *numero_fixe, *carte_id, *date_de_creation;
-	int code_postale, res, nom_size, prenom_size, sexe_size, date_de_naissance_size, email_size, adresse_size, nom_ville_size, complement_ad_size, numero_mobile_size, numero_fixe_size, carte_id_size, date_de_creation_size;
+	char *nom, *prenom, sexe, *date_de_naissance, *email, *adresse, *nom_departement, *complement_ad, *numero_mobile, *numero_fixe, *carte_id, *date_de_creation;
+	int code_postale, res, nom_size, prenom_size, sexe_size, date_de_naissance_size, email_size, adresse_size, nom_departement_size, complement_ad_size, numero_mobile_size, numero_fixe_size, carte_id_size, date_de_creation_size;
 
 
-	res = json_unpack_ex(donnees_object, &error, flags, "{s:s%, s:s%,  s:s%, s:s%, s:s%, s:s%, s:s%, s:i, s:s%, s:s%, s?s%, s:s%, s:s%}", "nom", &nom, &nom_size,"prenom", &prenom, &prenom_size,"sexe", &sexe, &sexe_size,"date_de_naissance", &date_de_naissance, &date_de_naissance_size,"email", &email, &email_size,"adresse", &adresse, &adresse_size,"complement_adresse", &complement_ad, &complement_ad_size,"nom_ville", &nom_ville, &nom_ville_size, "code_postale", &code_postale, "numero_mobile", &numero_mobile, &numero_mobile_size,"numero_fixe", &numero_fixe, &numero_fixe_size, "carte_id", &carte_id, &carte_id_size,"date_de_creation", &date_de_creation, &date_de_creation_size );
+	res = json_unpack_ex(donnees_object, &error, flags, "{s:s%, s:s%,  s:s%, s:s%, s:s%, s:s%, s:s%, s:i, s:s%, s:s%, s?s%, s:s%, s:s%}", "nom", &nom, &nom_size,"prenom", &prenom, &prenom_size,"sexe", &sexe, &sexe_size,"date_de_naissance", &date_de_naissance, &date_de_naissance_size,"email", &email, &email_size,"adresse", &adresse, &adresse_size,"complement_adresse", &complement_ad, &complement_ad_size,"nom_departement", &nom_departement, &nom_departement_size, "code_postale", &code_postale, "numero_mobile", &numero_mobile, &numero_mobile_size,"numero_fixe", &numero_fixe, &numero_fixe_size, "carte_id", &carte_id, &carte_id_size,"date_de_creation", &date_de_creation, &date_de_creation_size );
 
-	if(res || nom_size > NOM_SIZE || prenom_size > PRENOM || date_de_naissance_size > DATE_DE_NAISSANCE_SIZE || email_size > EMAIL_SIZE || adresse_size> ADRESSE_SIZE || nom_ville_size >  NOM_VILLE_SIZE || complement_ad_size > COMPLEMENT_AD_SIZE || code_postale > 99999 || numero_mobile_size >NUMERO_MOBILE_SIZE || numero_fixe_size > NUMERO_FIXE_SIZE || carte_id_size > CARTE_ID_SIZE || date_de_creation_size > DATE_DE_CREATION_SIZE || sexe_size==1)
+	if(res || nom_size > NOM_SIZE || prenom_size > PRENOM || date_de_naissance_size > DATE_DE_NAISSANCE_SIZE || email_size > EMAIL_SIZE || adresse_size> ADRESSE_SIZE || nom_departement_size >  NOM_VILLE_SIZE || complement_ad_size > COMPLEMENT_AD_SIZE || code_postale > 99999 || numero_mobile_size >NUMERO_MOBILE_SIZE || numero_fixe_size > NUMERO_FIXE_SIZE || carte_id_size > CARTE_ID_SIZE || date_de_creation_size > DATE_DE_CREATION_SIZE || sexe_size==1)
 	{
 		json_decref(donnees_object);
 		fail("json_unpack object Donnees_peronnelles: Expected a string but JSON key value is not one or JSON string value exceeded length expected or an incompatible JSON value encountered");
@@ -362,10 +242,10 @@ Donnees_Personnelles parse_donnees_perso_struct(json_t *donnees_object, size_t f
 	alloc_size.complement_ad_size = complement_ad_size +1;
 	alloc_size.email_size=email_size +1;
 	alloc_size.nom_size = nom_size +1;
-	alloc_size.nom_ville_size = nom_ville_size +1;
+	alloc_size.nom_departement_size = nom_departement_size +1;
 	alloc_size.prenom_size = prenom_size  +1;
 
-	return init_donnees_perso_arg(alloc_size, sexe, nom, prenom, date_de_naissance, email, adresse, code_postale, nom_ville, complement_ad, numero_mobile, numero_fixe, carte_id, date_de_creation);
+	return init_donnees_perso_arg(alloc_size, sexe, nom, prenom, date_de_naissance, email, adresse, code_postale, nom_departement, complement_ad, numero_mobile, numero_fixe, carte_id, date_de_creation);
 }
 
 Login parse_login_struct(json_t *login_object)
@@ -465,33 +345,33 @@ Agence parse_agence_struct(json_t *agence_object, size_t flags)
 	return init_agence_arg(alloc_size, uuid_agence, code_bic, indicatif_agence, domiciliation_agence, hash_code);
 }
 
-Ville parse_ville_struct(json_t *ville_object)
+Departement parse_departement_struct(json_t *departement_object)
 {
 	json_error_t error;
 
-	int code_postale, uuid_size, nom_ville_size, hash_code_size;
+	int code_postale, uuid_size, nom_departement_size, hash_code_size;
 
-	char *uuid, *nom_ville, *hash_code;
+	char *uuid, *nom_departement, *hash_code;
 
 	int res;
 
-	res = json_unpack_ex(ville_object, &error, 0, "{s:s%, s:i, s:s%, s:s%}", "uuid_compte", &uuid, &uuid_size, "code_postale", &code_postale, "nom_ville", &nom_ville, &nom_ville_size, "hash_code", &hash_code, &hash_code_size);
+	res = json_unpack_ex(departement_object, &error, 0, "{s:s%, s:i, s:s%, s:s%}", "uuid_departement", &uuid, &uuid_size, "code_postale", &code_postale, "nom_departement", &nom_departement, &nom_departement_size, "hash_code", &hash_code, &hash_code_size);
 
-	if (res || uuid_size != UUID_SIZE || nom_ville_size > NOM_VILLE_SIZE || hash_code_size > HASH_CODE_SIZE)
+	if (res || uuid_size != UUID_SIZE || nom_departement_size > NOM_VILLE_SIZE || hash_code_size > HASH_CODE_SIZE)
 	{
-		json_decref(ville_object);
-		fail("json_unpack object Ville: Expected a JSON string value or JSON string value exceeded length expected");
+		json_decref(departement_object);
+		fail("json_unpack object Departement: Expected a JSON string value or JSON string value exceeded length expected");
 		fprintf(stderr,"Error type: %s %s, at line: %d, column: %d\n",error.source, error.text, error.line, error.column);
 
 		return NULL;
 	}
-	ville_size_t alloc_size;
+	departement_size_t alloc_size;
 
-	alloc_size.uuid_ville=uuid_size + 1;
-	alloc_size.nom_ville=nom_ville_size + 1;
+	alloc_size.uuid_departement=uuid_size + 1;
+	alloc_size.nom_departement=nom_departement_size + 1;
 	alloc_size.hash_code=hash_code_size + 1;
 
-	return init_ville_arg(alloc_size, uuid, code_postale, nom_ville, hash_code);
+	return init_departement_arg(alloc_size, uuid, code_postale, nom_departement, hash_code);
 }
 
 int parse_valid_basic_data(const char* basic_data_filename, lData basic_data)
@@ -513,14 +393,14 @@ int parse_valid_basic_data(const char* basic_data_filename, lData basic_data)
 	size_t index;
 	json_t *value;
 
-	Ville ville;
+	Departement departement;
 	json_array_foreach(root, index, value)
 	{
 
-		if ((ville=parse_ville_struct(value))==NULL || !addVille(basic_data,ville))
+		if ((departement=parse_departement_struct(value))==NULL || !addDepartement(basic_data,departement))
 		{
 			json_decref(root);
-			fprintf(stderr, "error adding data to lData struct: a possible error is that uuid_ville element has a duplicate\n");
+			fprintf(stderr, "error adding data to lData struct: a possible error is that uuid_departement element has a duplicate\n");
 			return EXIT_FAILURE;
 		}
 	}
@@ -680,40 +560,40 @@ void** login_id_parsing(const char* path, Agence agence, Client client, Conseill
 	return NULL;
 }
 
-int parse_ville_data(Ville ville)
+int parse_departement_data(Departement departement)
 {
 
-	json_t *ville_object, *agence_array, *agence_object;
+	json_t *departement_object, *agence_array, *agence_object;
 
-	ville_object=json_load_data_file(ville->uuid_ville);
+	departement_object=json_load_data_file(departement->uuid_departement);
 
-	if (!json_is_object(ville_object))
+	if (!json_is_object(departement_object))
 	{
-		json_decref(ville_object);
-		fail("parsing data file ville process(0), check(0) failed: wrong JSON data type or format");
+		json_decref(departement_object);
+		fail("parsing data file departement process(0), check(0) failed: wrong JSON data type or format");
 		return EXIT_FAILURE;
 	}
-	if(!isEqualVille(parse_ville_struct(ville_object), ville))
+	if(!isEqualDepartement(parse_departement_struct(departement_object), departement))
 	{
-		json_decref(ville_object);
-		fail("parsing data file ville process(0), check(1) failed: POSSIBLE DATA CONFUSION: JSON data values does NOT corresponds to its file");
+		json_decref(departement_object);
+		fail("parsing data file departement process(0), check(1) failed: POSSIBLE DATA CONFUSION: JSON data values does NOT corresponds to its file");
 		return EXIT_FAILURE;
 	}
 
-	agence_array=json_object_get(ville_object, "liste_agences");
+	agence_array=json_object_get(departement_object, "liste_agences");
 
 	if (!json_is_array(agence_array))
 	{
-		json_decref(ville_object);
-		fail("parsing data file ville process(1), check(2) failed: wrong JSON data type or format");
+		json_decref(departement_object);
+		fail("parsing data file departement process(1), check(2) failed: wrong JSON data type or format");
 		return EXIT_FAILURE;
 	}
 
 	size_t index, breakout=json_array_size(agence_array)-1;
 
-	ville->liste_agences= init_liste_agence();
+	departement->liste_agences= init_liste_agence();
 
-	lAgence liste_agence=ville->liste_agences;
+	lAgence liste_agence=departement->liste_agences;
 
 	Agence agence;
 
@@ -723,16 +603,16 @@ int parse_ville_data(Ville ville)
 
 		if (agence == NULL)
 		{
-			json_decref(ville_object);
-			fail("parsing data file ville process(2), check(3) failed: wrong JSON data type or format");
+			json_decref(departement_object);
+			fail("parsing data file departement process(2), check(3) failed: wrong JSON data type or format");
 			return EXIT_FAILURE;
 		}
 
 
-		if(!addAgence(ville->liste_agences, agence))
+		if(!addAgence(departement->liste_agences, agence))
 		{
-			json_decref(ville_object);
-			fail("parsing data file ville process(2), check(4) failed: data contains a duplicate");
+			json_decref(departement_object);
+			fail("parsing data file departement process(2), check(4) failed: data contains a duplicate");
 			return EXIT_FAILURE;
 		}
 
@@ -743,8 +623,8 @@ int parse_ville_data(Ville ville)
 
 	}
 
-	liste_agence->next_agence=ville->liste_agences; //circular stack
-	json_decref(ville_object);
+	liste_agence->next_agence=departement->liste_agences; //circular stack
+	json_decref(departement_object);
 
 
 	return EXIT_SUCCESS;
@@ -911,11 +791,11 @@ int parse_agence_data(Agence agence)
 
 
 
-int login_key_parsing(Login login, Client client, Conseiller conseiller, Ville ville, Agence agence, int option)
+int login_key_parsing(Login login, Client client, Conseiller conseiller, Departement departement, Agence agence, int option)
 {
-	const char *path = malloc((strlen(ville->uuid_ville)+1+strlen(agence->uuid_agence)+1)*sizeof(char));
+	const char *path = malloc((strlen(departement->uuid_departement)+1+strlen(agence->uuid_agence)+1)*sizeof(char));
 	json_t **result;
-	strcpy(path, ville->uuid_ville);
+	strcpy(path, departement->uuid_departement);
 	strcat(path, "/");
 	strcat(path, agence->uuid_agence);
 	switch (option)
@@ -1206,19 +1086,19 @@ int parse_full_data(lData Data)
 		fail("FULL DATA FAILED TO PARSE: process(0)");
 		return EXIT_FAILURE;
 	}
-	assert(Data->ville->uuid_ville!=NULL);
+	assert(Data->departement->uuid_departement!=NULL);
 
 	lData iterdata;
 
 	do
 	{
-		if(!parse_ville_data(iterdata->ville))
+		if(!parse_departement_data(iterdata->departement))
 		{
-			fail("FULL DATA FAILED TO PARSE: process(1), lVille data parsing");
+			fail("FULL DATA FAILED TO PARSE: process(1), lDepartement data parsing");
 			return EXIT_FAILURE;
 		}
 
-		lAgence iter_agence=iterdata->ville->liste_agences;
+		lAgence iter_agence=iterdata->departement->liste_agences;
 
 		do
 		{
@@ -1272,7 +1152,7 @@ int parse_full_data(lData Data)
 			iter_agence=iter_agence->next_agence;
 		} while (iter_agence!=NULL);
 
-		iterdata=iterdata->next_ville;
+		iterdata=iterdata->next_departement;
 
 	} while (iterdata!=NULL);
 
@@ -1300,13 +1180,28 @@ int dump_compte_data(Compte compte)
 
 	if((bool0 && bool1 && bool2 && bool3 && bool4 && bool5 && bool6 && bool7 && bool8)==0)
 	{
-		fail("Dumping Json failed process(0): Compte struct, wrong format or invalid data");
+		fail("Dumkeyg Json failed process(0): Compte struct, wrong format or invalid data");
 		return EXIT_FAILURE;
 	}
 
 	compte_object=json_pack_ex(&error, JSON_COMPACT, "{s:s, s:i, s:i, s:i, s:f, s:s, s:{s:s, s:s, s:i, s:s}}", "uuid_compte", compte->uuid_compte, "statut", compte->statut, "nature_compte", compte->nature_compte, "type_compte", compte->type_compte, "solde", compte->solde, "uuid_operations", compte->operations, "rib", "iban", compte->rib->iban, "code_bic", compte->rib->code_bic, "indicatif_agence",  compte->rib->indicatif_agence, "domiciliation_agence", compte->rib->domiciliation_agence);
 
-	if(!compte_object)
+
+	json_t *titulaire_object;
+
+
+	if(compte->nature_compte==INDIVIDUEL)
+	{
+		titulaire_object = json_pack_ex(&error, JSON_COMPACT, "{{s:s s:s, s:s}, {}}", "uuid_client", compte->titulaire.client->uuid_client, "nom", compte->titulaire.client->donnees_perso->nom, "prenom", compte->titulaire.client->donnees_perso->prenom);
+	}else
+	{
+		titulaire_object = json_pack_ex(&error, JSON_COMPACT, "{{s:s s:s, s:s}, {s:s, s:s, s:s}}", "uuid_client", compte->titulaire.clients[0]->uuid_client, "nom", compte->titulaire.clients[0]->donnees_perso->nom, "prenom", compte->titulaire.clients[0]->donnees_perso->prenom, "uuid_client", compte->titulaire.clients[1]->uuid_client, "nom", compte->titulaire.clients[1]->donnees_perso->nom, "prenom", compte->titulaire.clients[1]->donnees_perso->prenom);
+	}
+
+
+	json_object_set_new(compte_object, "titulaire", titulaire_object);
+
+	if(!compte_object || !titulaire_object)
 	{
 		fail("json_pack struct Compte: JSON string value exceeded length expected or incompatible JSON key value encountered");
 		fprintf(stderr,"Error type: %s %s, at line: %d, column: %d\n",error.source, error.text, error.line, error.column);
@@ -1320,8 +1215,109 @@ int dump_compte_data(Compte compte)
 	return EXIT_SUCCESS;
 
 }
-int dump_client_data(Client client);
-int dump_agence_data(Client client);
-int dump_basic_data(Client client);
+int dump_client_data(Client client)
+{
+	json_t *client_object;
+	json_error_t error;
+	int bool0, bool1, bool2, bool3, bool4, bool5, bool6, bool7, bool8;
+
+	client_object = json_pack_ex(&error, JSON_COMPACT, "{s:s, s:i, s:{s:s, s:s, s:s, s:s, s:s, s:s, s:s, s:s, s:i, s:s, s:s, s:s, s:s}}", "uuid_client", client->uuid_client, "statut", client->statut, "donnees_personnelles", "nom", client->donnees_perso->nom, "prenom", client->donnees_perso->prenom, "sexe", client->donnees_perso->sexe, "date_de_naissance", client->donnees_perso->date_de_naissance, "email", client->donnees_perso->email, "adresse", client->donnees_perso->adresse, "complement_adresse", client->donnees_perso->complement_ad, "nom_departement", client->donnees_perso->nom_departement, "code_postale", client->donnees_perso->code_postale, "numero_mobile", client->donnees_perso->numero_mobile, "numero_fixe", client->donnees_perso->numero_fixe, "carte_id", client->donnees_perso->carte_identite, "date_de_creation", client->donnees_perso->date_de_creation);
+
+	json_t *compte_array;
+	compte_array=json_array();
+	Compte iter_compte= client->comptes;
+
+	while(iter_compte!=NULL)
+	{
+		json_array_append_new(compte_array, json_pack("{s:s}", "uuid_compte", iter_compte->uuid_compte));
+		iter_compte=iter_compte->next_compte;
+	}
+
+	if(!compte_array || !client_object)
+	{
+		fail("json_pack struct Client: JSON string value exceeded length expected or incompatible JSON key value encountered");
+		fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
+		return EXIT_FAILURE;
+	}
+
+	json_object_set_new(client_object, "comptes", compte_array);
+
+	json_dump_data_file(client_object, client->uuid_client);
+
+	return EXIT_SUCCESS;
+}
+int dump_agence_data(Agence agence);
+
+
+int dump_basic_data(lData data)
+{
+	json_error_t error;
+
+	json_t *data_array;
+
+	data_array=json_array();
+
+	lData data_iter= data;
+
+	do
+	{
+
+		json_array_append_new(data_array, json_pack("{s:i, s:s, s:s, s:i, s:s}", "statut", data_iter->departement->statut, "uuid_departement", data_iter->departement->uuid_departement, "nome_departement", data_iter->departement->nom_departement, "code_postale", data_iter->departement->code_postale, "hash_code", data_iter->departement->hash_code))
+	} while (data_iter!=NULL);
+
+
+	json_dump_data_file(data_array, BASIC_DATA);
+
+	return EXIT_SUCCESS
+}
+
+int parse_admin(Admin admin)
+{
+	json_error_t error;
+
+	json_t *admin_array, *value;
+
+	json_load_data_file(ADMIN_JSON_FILE);
+
+	if(!json_is_array(admin_array))
+	{
+		fail("json_parsing struct ADMIN: JSON is not an array");
+		return EXIT_FAILURE;
+	}
+	size_t index, breakout=json_array_size(admin_array);
+
+	Admin admin_iter=admin;
+
+	admin->login_admin = init_login_admin();
+
+	Login_Admin login = admin->login_admin;
+
+	int res;
+
+	json_array_foreach(admin_array, index, value)
+	{
+		res=json_unpack_ex(value, &error, JSON_STRICT, "{s:s, s:{s:s, s:s, s:s}}", "uuid_admin", &(admin_iter->uuid_admin), "login_admin", "code_agence", &(login->code_agence), "login_id", &(login->login_id), "key", &(login->login_key));
+		if(res)
+		{
+			fail("json_prsing struct ADMIN: JSON string value wrong format or incompatible JSON key value encountered");
+			fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
+			return EXIT_FAILURE;
+		}
+		if(index < breakout - 1)
+		{
+			admin_iter->next_admin = init_admin();
+
+			admin_iter = admin_iter->next_admin;
+
+			admin_iter->login_admin = init_login_admin();
+
+			login = admin_iter->login_admin;
+		}
+	}
+
+	return admin;
+}
+
+
 
 #endif

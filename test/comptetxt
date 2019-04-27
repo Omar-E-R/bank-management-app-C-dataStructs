@@ -1,50 +1,5 @@
 #include "compte.h"
 
-struct client{
-
-	const char* uuid_client;
-	Login client_login;
-	int statut;
-
-	Donnees_Personnelles donnees_perso;
-
-	Compte comptes;
-
-};
-union client_s
-{
-	Client client;
-
-	Client clients[2];
-
-};
-struct rib
-{
-	const char* iban;
-	const char* code_bic;
-	const char* numero_compte;
-	const char* indicatif_agence;
-	const char* domiciliation_agence;
-
-};
-struct compte
-{
-	const char* uuid_compte;
-
-	compte_t statut; //compte supprime ? i.e actif ou non actif
-	compte_t nature_compte;
-	compte_t type_compte;//LIVRET...
-
-	double solde;
-
-	const char *operations;//A FILENAME OR MAYBE I WILL CHANGE IT TO A FILE POINTER
-
-	Rib rib;
-
-	Compte next_compte;
-
-	Client_s titulaire;
-};
 
 Rib init_rib_arg(size_t domiciliation_size, char *iban, char *code_bic, char *numero_compte, int indicatif_agence, char *domiciliation)
 {

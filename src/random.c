@@ -1,7 +1,8 @@
 #include"random.h"
 
 #define RAND_MAX_SEARCH 9999999
-
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
 
 static size_t SIZE=6; //size of random generated numbers
 static size_t SIZE_FULL=10;//size of login id
@@ -15,7 +16,7 @@ enum boolean
 
 typedef struct arbre *Arbre;
 
-static struct arbre
+struct arbre
 {
 	int valeur;
 	enum boolean parcouru;
@@ -39,18 +40,9 @@ static int rand_tab_has_duplicates(int *rand_tab)
 	return 0;
 }
 
-static void zeros_tab(int *rand_tab)
-{
-	int i;
-	for (i = 0; i < SIZE; i++)
-	{
-		rand_tab[i] = 0;
-	}
-}
 /* GENERATES [SIZE] (6) INTEGERS THAT AT MOST HAS TWO OF THE SAME INTEGERS */
 static int randd(int *rand_tab)
 {
-	zeros_tab(rand_tab);
 	unsigned long int errors=0;
 	int i;
 
@@ -101,42 +93,44 @@ static unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
 	return c;
 }
 
-static int* to_array(Arbre arbre)
+static char* to_array(Arbre arbre)
 {
 	Arbre var=arbre;
 
-	int* tab=malloc(SIZE_FULL*sizeof(int));
+	char* tab=malloc((SIZE_FULL + 1)*sizeof(char));
 
 	int i;
 
 	for (i = 0; i < SIZE_FULL; i++)
 	{
-		tab[i] = var->valeur;
+		tab[i] = 48+ var->valeur;
 
 		var = var->next_arbre;
 	}
+	tab[SIZE_FULL]='\0';
 	return tab;
 }
 
 /* GENERATES 10 INTEGERS ID ENCODED WITH THE 4 INTEGERS CODE PROVIDED */
-int* login_id_generator(int *code)
+char* login_id_generator(int *code)
 {
 	SIZE=6;
 	SIZE_FULL=10;
 	SIZE_RAND_DUP=2;
-	struct timeval time; //accurate time to the microseconds
+	//MUST BE DONE IN MAIN
+	// struct timeval time; //accurate time to the microseconds
 
-	gettimeofday(&time, NULL);
+	// gettimeofday(&time, NULL);
 
-	// microsecond has 1 000 000
-	// Assuming we do not need quite that accuracy
-	// Also we do not assume the system clock has that accuracy.
+	// // microsecond has 1 000 000
+	// // Assuming we do not need quite that accuracy
+	// // Also we do not assume the system clock has that accuracy.
 
-	srand((time.tv_sec * 1000) + (time.tv_usec / 1000));
+	// srand((time.tv_sec * 1000) + (time.tv_usec / 1000));
 
 	int i;
 
-	int *rand_tab = malloc(6 * sizeof(int));
+	int *rand_tab = calloc(6 , sizeof(int));
 
 	if(randd(rand_tab))//FILLING THE ARRAY WITH RANDOM VALUES (6)
 	{
@@ -145,7 +139,7 @@ int* login_id_generator(int *code)
 
 	}
 
-	Arbre arbre = (Arbre)malloc(sizeof(struct arbre)), count = arbre;
+	Arbre arbre = (Arbre)calloc(1, sizeof(struct arbre)), count = arbre;
 
 	/*INIT ARBRE CIRCULAIRE */
 
@@ -158,10 +152,9 @@ int* login_id_generator(int *code)
 		{
 			break;
 		}
-		if (count->next_arbre == NULL)
-		{
-			count->next_arbre = (Arbre)malloc(sizeof(struct arbre));
-		}
+
+		count->next_arbre = (Arbre)calloc(1, sizeof(struct arbre));
+
 		count = count->next_arbre;
 	}
 
@@ -218,8 +211,10 @@ int* login_id_generator(int *code)
 	return to_array(arbre);
 }
 
-int login_id_decoder(int* login_id)
+char* login_id_decoder(char* login_id)
 {
+	char* id_decoded=malloc(5*sizeof(char));
+	id_decoded[4]='\0';
 	SIZE=6;
 	SIZE_FULL=10;
 	SIZE_RAND_DUP=2;
@@ -229,7 +224,7 @@ int login_id_decoder(int* login_id)
 	/* TRANSFORMING ARRAY OF LOGIN ID TO CIRCULAR STACK */
 	for (i = 0; i < SIZE_FULL; i++)
 	{
-		count->valeur = login_id[i];
+		count->valeur = login_id[i] - 48; // -48 FOR THE CHAR TO INT
 		count->parcouru = true;//OPPOSIT OF WHAT I DID IN THE ABOVE FUNCTION
 
 		if (i == SIZE_FULL - 1)
@@ -275,15 +270,15 @@ int login_id_decoder(int* login_id)
 				count = count->next_arbre;
 			}
 		}
-		/* REWRITING THE CODE RESULT(4 INTEGERS) TO THE ARRAY LOGIN_ID */
-		login_id[i] = count->valeur;
+		/* REWRITING THE CODE RESULT(4 INTEGERS) TO THE STRING */
+		id_decoded[i] = 48 + count->valeur; //48 FOR THE INT TO CHAR
 		count->parcouru = false;
 	}
 
-	return 0;
+	return id_decoded;
 }
 
-int uuid_gen(const char* uuid)
+int uuid_gen(char* uuid)
 {
 	uuid_t binuuid;
 	/*
@@ -315,101 +310,86 @@ int uuid_gen(const char* uuid)
 
 	// Equivalent of printf("%s\n", uuid); - just my personal preference
 	//puts(uuid);
-
+	uuid[36]='\0';
 	return EXIT_SUCCESS;
 }
 
-static int array_to_int(int* array, size_t n)
+static char* arraytostring(int* array)
 {
-	size_t i;
-	int dec=1, res=0;
-	for(i=n; i>-1; i--)
+	int i;
+	char *res=malloc(6*sizeof(char));
+	for(i=0; i<5; i++)
 	{
-		res+= array[i]*dec;
-		dec*=10;
+		res[i]=48+array[i];
 	}
+	res[5]='\0';
 	return res;
 }
-static int array_has(int* array, int nb, size_t n)
-{
-	size_t i;
-	for(i=0; i<n; i++)
-	{
-		if(array[i]==nb)
-			return EXIT_FAILURE;
-	}
-	return EXIT_SUCCESS;
-}
-int indicatif_gen(const char **indicatif_agence, size_t nb_ids)
+
+char* agency_id_generator()
 {
 	SIZE=5;
 	SIZE_RAND_DUP=3;
+	int id[5];
 
-	int* rand_tab[nb_ids];
-	int *res=calloc(nb_ids, sizeof(int));
-	int nb;
 	size_t i=0, errors=0;
 
-	for(i=0; i<nb_ids; i++)
+	if(randd(id))
 	{
-		do
-		{
-			if(!randd(rand_tab[i]))
-				exit(EXIT_FAILURE);
-
-			nb=array_to_int(rand_tab[i], 5);
-
-			errors++;
-
-			if(errors> RAND_MAX_SEARCH)
-			{
-				exit(EXIT_FAILURE);
-			}
-		} while (array_has(res, nb, i+1));
-
+		fprintf(stderr, "Error generating agency id no: %d",i);
+		return NULL;
 	}
-
-	for ( i = 0; i < nb_ids; i++)
-	{
-		sprintf(indicatif_agence[i],"%05d", res[i] );
-	}
-	return EXIT_SUCCESS;
+	return arraytostring(id);
 }
 
 int global_account_number=10000;//init starts at 10000
 
-int iban_gen(const char *iban, const char *indicatif_agence, const char* code_postale)
+char* iban_gen(const char *indicatif_agence, const char* code)
 {
-	sprintf(iban,"FR%.2s%.5s%.5s", code_postale, BANK_NUMBER, indicatif_agence);
+	char *iban=calloc(38, sizeof(char));
+	if(global_account_number>10000000)
+	{
+		fprintf(stderr,"SEED FOR BANK ACCOUNTS NUMBERS EXCEEDED LIMIT\n");
+		exit(EXIT_FAILURE);
+	}
 
-	int i, error;
+	int i, error=0;
 	do
 	{
-	 	i=(rand() % 10000);
+	 	i=(rand() % 1000);
 		error++;
 		if(error>RAND_MAX_SEARCH)
+		{
+			fprintf(stderr, "ERROR iban_gen(1) \n");
 			exit(EXIT_FAILURE);
+		}
 	} while (i==0);
 
 	global_account_number+=i;
 
-	char res[11];
+	char account_no[12];
+	sprintf(account_no, "%010d", global_account_number);
 
-	sprintf(res, "%010d", global_account_number);
+	//A CAPITAL RANDOM LETTER
+	char key= 65 + (rand () % 26);
 
-	char key= (65 + (rand () % 91));
 	error=0;
+	int rib_key;
 	do
 	{
-	 	i=(rand() % 100);
+	 	rib_key=(rand() % 100);
 		error++;
 		if(error>RAND_MAX_SEARCH)
+		{
+			fprintf(stderr, "ERROR iban_gen(2) \n");
 			exit(EXIT_FAILURE);
-	} while (i==0);
+		}
+	} while (rib_key == 0);
 
-	sprintf(iban, "%.10s%c%02d", res, key, i);
+	sprintf(iban, "FR%.2s%.5s%.5s%.10s%c%02d", code, BANK_NUMBER, indicatif_agence, account_no, key, rib_key);
 
+	iban[37]='\0';
 
-	return EXIT_SUCCESS;
+	return iban;
 
 }

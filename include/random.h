@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <sys/time.h>
 #include <time.h>
 #include <ctype.h>
@@ -13,7 +14,7 @@
 #include <uuid/uuid.h>
 
 #define lowercaseuuid true
-#define BANK_NUMBER "40305"
+#define BANK_NUMBER "40053"
 
 extern int global_account_number;
 
@@ -22,10 +23,10 @@ extern int global_account_number;
 //#define capitaluuid true
 
 
-int uuid_gen(const char* uuid);
-int* login_id_generator(int *code);
-int login_id_decoder(int* login_id);
-int indicatif_gen(const char **indicatif_agence, size_t nb_ids); //5chiffres
-int iban_gen(const char *iban, const char *indicatif_agence, const char* code_postale);
+int uuid_gen(char* uuid);
+char* login_id_generator(int *code);
+char *login_id_decoder(char *login_id);
+char *agency_id_generator();
+char* iban_gen(const char *indicatif_agence, const char *code);
 
 #endif

@@ -1,16 +1,19 @@
 #ifndef LOGIN_H
 #define LOGIN_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <crypt.h>
 #include <sys/syscall.h>
-#define EXIT_FAILURE 1
-#define EXIT_SUCCESS 0
-#define LOGIN_ID_SIZE 10
-#define LOGIN_KEY_SIZE 10
-#define CODE_AGENCE_SIZE 37
+#include "bank.h"
+#include "jsonbank.h"
+#include "random.h"
+
+#define LOGIN_ID_SIZE 11
+
+typedef struct login_t login_t;
 
 typedef struct login_size
 {
@@ -18,16 +21,22 @@ typedef struct login_size
 
 } login_size_t ;
 
+int validate_login(login_t* private, login_t* user);
+int encrypt_login_pass(login_t* login);
 
-typedef struct login *Login;
+// login_t* init_login();
 
-typedef struct login_admin *Login_Admin;
+// login_t* init_login_arg(login_size_t alloc_size, char *id, char *key);
 
-Login init_login();
-Login init_login_arg(login_size_t alloc_size, char *id, char *key);
-Login_Admin init_login_admin();
-int encrypt_login_pass(Login user);
-int encrypt_code(const char *hash_code);
+// login_t*_Admin init_login_admin();
 
 
+// login_t* create_login(char* pass, const char *code_agence, const char *code_departement);
+
+// login_t*_Admin create_admin_login(char *pass, const char *code_agence, const char *code_departement);
+
+// void printout_log_ad(login_t*_Admin login);
+// void printout_log(login_t* login);
+
+// int validate_login_admin(login_t*_Admin private, login_t*_Admin user);
 #endif

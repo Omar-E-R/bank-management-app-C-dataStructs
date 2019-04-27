@@ -1,49 +1,5 @@
 #include "client.h"
 
-struct donnees_personnelles
-{
-
-	const char *nom;
-	const char *prenom;
-	char sexe;
-
-	const char* date_de_naissance;
-
-	const char *email;
-	const char *adresse;
-
-
-	int code_postale;
-	const char *nom_ville;
-	const char *complement_ad;
-	const char *numero_mobile;
-	const char *numero_fixe;
-
-	const char* carte_identite;
-	const char* date_de_creation;
-
-};
-struct client{
-
-	const char* uuid_client;
-	Login client_login;
-	int statut;
-
-	Donnees_Personnelles donnees_perso;
-
-	Compte comptes;
-
-};
-
-
-union client_s
-{
-	Client client;
-
-	Client clients[2];
-
-};
-
 
 Donnees_Personnelles init_donnees_perso()
 {
