@@ -510,6 +510,31 @@ login_t *bank_login_authenticate(login_t *list, login_t *login);
 login_t *bank_agency_get_logins(agency_t *agency);
 int bank_agency_free_logins(agency_t *agency);
 
-int bank_free_logins(login_t *login);
+void free_login(login_t *login);
 
+void free_admin(admin_t *admin);
+
+void free_individual(individual_t *individual);
+
+void free_agency(agency_t *agency);
+
+void free_state(state_t *state);
+
+int bank_free_logins(login_t *login);
+void bank_agency_changed(agency_t *agency);
+void bank_agency_set_status(agency_t *agency, status_type status);
+int bank_employee_export_info(employee_t *employee);
+void bank_individual_changed(individual_t *individual);
+login_t *bank_employee_get_login(employee_t *employee);
+int bank_state_is_status(state_t *state, status_type status);
+char *bank_login_get_id(login_t *login);
+int bank_agency_export_info(agency_t *agency);
+int modify_individual(individual_t *individual, char *email, char *address_no1, char *city, int zipcode, char *address_no2, char *mobile_phone, char *home_phone, char *id_card_no);
+login_t *create_login(agency_t *agency, char *pass);
+individual_t *create_individual(agency_t *agency, login_t *login, char sex, char *lastname, char *firstname, char *birthdate, char *email, char *address_no1, char *city, int zipcode, char *address_no2, char *mobile_phone, char *home_phone, char *id_card_no);
+
+int clear();
+
+individual_t *scan_individual(login_t *login, agency_t *agency);
+login_t *bank_login_add(login_t *list, login_t *login);
 #endif

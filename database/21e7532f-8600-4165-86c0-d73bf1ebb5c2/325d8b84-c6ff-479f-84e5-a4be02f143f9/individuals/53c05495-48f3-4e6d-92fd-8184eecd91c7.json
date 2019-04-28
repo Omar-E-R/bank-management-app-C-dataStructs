@@ -1,0 +1,19 @@
+{
+                "status": 1,
+                "uuid": "53c05495-48f3-4e6d-92fd-8184eecd91c7",
+                "sex": 77,
+                "lastname": "ELRIFAI",
+                "firstname": "OMAR",
+                "birthdate": "22061996",
+                "email": "ELRIFAI.OMAR@OUTLOOK.COM",
+                "address_no1": "4-AVENUE-EDOUARD-BELIN",
+                "city": "TOULOUSE",
+                "zipcode": 31400,
+                "address_no2": "APPT2208",
+                "mobilephone": "0695664044",
+                "homephone": "0",
+                "id_card_no": "123456789",
+                "joineddate": "Sat Apr 27 20:54:05 2019\n",
+                "flag": 0,
+                "accounts": []
+}

@@ -866,8 +866,11 @@ int bank_individual_set_login(individual_t *individual, login_t *login)
 	if(individual->login==NULL && login->status==BANK_LOGIN_ENCRYPTED)
 	{
 		login_t* login_new=bank_login();
+
 		login_new->status=BANK_LOGIN_ENCRYPTED;
+
 		strcpy(login_new->login_id,login->login_id);
+
 		strcpy(login_new->login_key,login->login_key);
 
 		if(login->uuid!=NULL)
@@ -1290,6 +1293,8 @@ int bank_employee_set_individual(employee_t *employee, individual_t* individual)
 	employee->status=BANK_OBJECT_INIT;
 	return EXIT_SUCCESS;
 }
+
+
 int bank_employee_set_login(employee_t *employee, login_t *login)
 {
 	if(employee==NULL || employee->status!=BANK_OBJECT_EMPTY)
@@ -1297,7 +1302,23 @@ int bank_employee_set_login(employee_t *employee, login_t *login)
 		fprintf(stderr, "error bank_employee_set_login\n");
 		return EXIT_FAILURE;
 	}
+	if(employee->personal_data==NULL && login->uuid!=NULL)
+	{
+		employee->personal_data=bank_individual(BANK_ACCOUNT_EMPTY);
+	}
 	return bank_individual_set_login(employee->personal_data, login);
+}
+
+
+login_t* bank_employee_get_login(employee_t *employee)
+{
+	if(employee==NULL || employee->personal_data==NULL || employee->personal_data->login==NULL)
+	{
+		fprintf(stderr, "error bank_employee_get_login\n");
+		return NULL;
+	}
+
+	return employee->personal_data->login;
 }
 
 
@@ -1343,7 +1364,7 @@ int bank_employee_authenticate_login(employee_t *employee, login_t *login)
 
 int bank_employee_set_agency(employee_t* employee, agency_t *agency)
 {
-	if (employee == NULL || employee->status != BANK_OBJECT_INIT || agency == NULL || agency->status != BANK_OBJECT_INIT)
+	if (employee == NULL || agency == NULL)// || employee->status != BANK_OBJECT_INIT || agency->status != BANK_OBJECT_INIT)
 	{
 		fprintf(stderr, "error bank_employee_set_agency\n");
 
@@ -1374,6 +1395,14 @@ login_t* bank_login()
 	login->status=BANK_OBJECT_NULL;
 
 	return login;
+}
+char* bank_login_get_id(login_t* login)
+{
+	if(login!=NULL && login->login_id!=NULL)
+	{
+		return login->login_id;
+	}
+	return NULL;
 }
 
 login_t* bank_login_generate(agency_t *agency)
@@ -1470,6 +1499,11 @@ agency_t* bank_agency()
 
 int bank_agency_is_status(agency_t *agency, status_type flag)
 {
+	if(agency==NULL)
+	{
+		fprintf(stderr, "error bank_agency_is_status");
+		return EXIT_FAILURE;
+	}
 	switch (flag)
 	{
 	case BANK_OBJECT_BLOCKED:
@@ -1513,6 +1547,7 @@ int bank_agency_is_status(agency_t *agency, status_type flag)
 		break;
 	}
 	default:
+		fprintf(stderr, "error bank_agency_is_status");
 		return EXIT_FAILURE;
 	}
 	return EXIT_FAILURE;
@@ -1553,7 +1588,7 @@ int bank_agency_free_logins(agency_t *agency)
 {
 	if(agency==NULL || agency->logins==NULL)
 	{
-		fprintf(stderr, "error bank_agency_get_logins\n");
+		fprintf(stderr, "error bank_agency_free_logins\n");
 		return EXIT_FAILURE;
 	}
 
@@ -1584,7 +1619,7 @@ int bank_free_logins(login_t* login)
 {
 	if(login==NULL)
 	{
-		fprintf(stderr, "error bank_agency_get_logins\n");
+		fprintf(stderr, "error bank_free_logins\n");
 		return EXIT_FAILURE;
 	}
 
@@ -1779,7 +1814,7 @@ int bank_agency_account_add(account_t *account)
 
 int bank_agency_individual_add(individual_t *individual)
 {
-	if(individual==NULL || individual->agency==NULL || individual->next!=NULL || individual->status!=BANK_OBJECT_INIT)
+	if(individual==NULL || individual->agency==NULL) //|| individual->next!=NULL || individual->status!=BANK_OBJECT_INIT)
 	{
 		fprintf(stderr, "error bank_agency_individual_add(1)\n");
 		return EXIT_FAILURE;
@@ -1814,7 +1849,7 @@ int bank_agency_individual_add(individual_t *individual)
 
 int bank_agency_employee_add(employee_t *employee)
 {
-	if(employee==NULL || employee->agency==NULL || employee->next!=NULL || employee->status!=BANK_OBJECT_INIT)
+	if(employee==NULL || employee->agency==NULL || employee->next!=NULL)// || employee->status!=BANK_OBJECT_INIT)
 	{
 		fprintf(stderr, "error bank_agency_employee_add\n");
 
@@ -1873,11 +1908,25 @@ state_t* bank_state()
 }
 
 
+int bank_state_is_status(state_t* state, status_type status)
+{
+	if(state!=NULL)
+	{
+		if(state->status==status)
+		{
+			return EXIT_SUCCESS;
+		}
+		return EXIT_FAILURE;
+	}
+	fprintf(stderr, "error bank_state_set_status\n");
+	return EXIT_FAILURE;
+}
 int bank_state_set_status_empty(state_t* state)
 {
 	if(state!=NULL)
 	{
 		state->status=BANK_OBJECT_EMPTY;
+		state->changes=BANK_OBJECT_CHANGED;
 		return EXIT_SUCCESS;
 	}
 	fprintf(stderr, "error bank_state_set_status\n");
@@ -1888,6 +1937,7 @@ int bank_state_set_status_init(state_t* state)
 	if(state!=NULL)
 	{
 		state->status=BANK_OBJECT_INIT;
+		state->changes=BANK_OBJECT_CHANGED;
 		return EXIT_SUCCESS;
 	}
 	fprintf(stderr, "error bank_state_set_status\n");
@@ -1972,7 +2022,12 @@ char *bank_state_get(state_t* state, size_t flag)
 	}
 	case BANK_STATE_ZIPCODE:
 	{
-		return &(state->zip_code);
+		char* zip=malloc(3*sizeof(char));
+		zip[0]=state->zip_code /10;
+		zip[1]=state->zip_code %10;
+		zip[2]='\0';
+
+		return zip;
 	}
 	case BANK_STATE_CODE:
 	{
@@ -1986,7 +2041,7 @@ char *bank_state_get(state_t* state, size_t flag)
 
 agency_t* bank_state_get_empty_agency(state_t* state)
 {
-	if (state == NULL || state->status == BANK_OBJECT_NULL || state->agencies == NULL)
+	if (state == NULL || state->agencies == NULL)
 	{
 		fprintf(stderr, "error bank_state_get_empty_agency(1)\n");
 		return NULL;
@@ -2166,9 +2221,8 @@ state_t* bank_get_state_n(bank_t* bank, int option, size_t num)
 		} while (state != NULL);
 	}
 
-
-
-	return state;
+	fprintf(stderr, "nothing were found bank_get_state_n\n");
+	return NULL;
 
 }
 
@@ -2255,8 +2309,8 @@ int bank_admin_set_login(admin_t* admin, login_t* login)
 	strcpy(login_new->login_id, login->login_id);
 	strcpy(login_new->login_key, login->login_key);
 
-	memset(&(login->login_key[0]), 0, strlen(login->login_key));
-	memset(&(login->login_id[0]), 0, strlen(login->login_id));
+	// memset(&(login->login_key[0]), 0, strlen(login->login_key));
+	// memset(&(login->login_id[0]), 0, strlen(login->login_id));
 
 	admin->login=login_new;
 
@@ -2347,240 +2401,395 @@ int bank_admin_add(admin_t* admin_list, admin_t* admin)
 }
 
 
-
-// Departement init_departement_arg(departement_size_t allocation_size,char* uuid_departement,int code_postale,char* nom_departement,char* hash_code)
-// {
-// 	epartement departement = (departement)calloc(1, sizeof(struct departement));
-
-// 	departement->uuid_departement = (char *)calloc(allocation_size.uuid_departement, sizeof(char));
-
-// 	departement->code_postale = (char *)calloc(CODE_POSTALE_SIZE, sizeof(char));
-
-// 	departement->nom_departement = (char *)calloc(allocation_size.nom_departement, sizeof(char));
-
-// 	departement->hash_code = (char *)calloc(allocation_size.hash_code, sizeof(char));
-
-// 	strcpy(departement->uuid_departement, uuid_departement);
-// 	strcpy(departement->nom_departement, nom_departement);
-// 	strcpy(departement->hash_code, hash_code);
-
-// 	sprintf(departement->code_postale, "%05d", code_postale);
-
-// 	return departement;
-// }
-
-// lData init_data()
-// {
-// 	lData data = (lData)calloc(1, sizeof(struct data));
-
-// 	return data;
-// }
-
-// Admin init_admin()
-// {
-// 	Admin admin = (Admin)calloc(1, sizeof(struct admin));
-
-// 	admin->uuid_admin = (char *)calloc(UUID_SIZE, sizeof(char));
-
-// 	admin->next_admin=NULL;
-
-// 	return admin;
-// }
-
-// int isEqualdepartement(departement departement1, departement departement2)
-// {
-// 	if (strcmp(departement1->uuid_departement, departement2->uuid_departement) == 0 && strcmp(departement1->code_postale, departement2->code_postale) == 0 && strcmp(departement1->nom_departement, departement2->nom_departement) == 0 && strcmp(departement1->hash_code, departement2->hash_code) == 0)
-// 		return EXIT_SUCCESS;
-// 	return EXIT_FAILURE;
-// }
-
-// int isEqualAdmin(Admin admin1, Admin admin2)
-// {
-// 	if (strcmp(admin1->uuid_admin, admin2->uuid_admin))
-// 		return EXIT_SUCCESS;
-// 	return EXIT_FAILURE;
-// }
-
-// int addAgence(lAgence liste_agence, Agence agence)
-// {
-// 	lAgence var = liste_agence;
-
-// 	while (var!=NULL)
-// 	{
-// 		if(var->agence!=NULL)
-// 		{
-// 			if (isEqualAgence((var->agence), agence)==EXIT_SUCCESS)
-// 			{
-// 				return EXIT_FAILURE;
-// 			}
-
-// 		}else
-// 		{
-// 			var->agence=agence;
-// 			return EXIT_SUCCESS;
-// 		}
-// 		if(var->next_agence==NULL)
-// 		{
-// 			var->next_agence= init_liste_agence();
-// 		}
-// 		var=var->next_agence;
-
-// 	}
-// 	return EXIT_SUCCESS;
-// }
-
-// int adddepartement(lData liste_departement, departement departement)
-// {
-// 	lData var = liste_departement;
-
-// 	while (var!=NULL)
-// 	{
-// 		if(var->departement!=NULL)
-// 		{
-// 			if (isEqualdepartement(var->departement, departement)==EXIT_SUCCESS)
-// 			{
-// 				return EXIT_FAILURE;
-// 			}
-
-// 		}else
-// 		{
-// 			var->departement=departement;
-// 			return EXIT_SUCCESS;
-// 		}
-// 		if(var->next_departement==NULL)
-// 		{
-// 			var->next_departement= init_data();
-// 		}
-// 		var=var->next_departement;
-
-// 	}
-// 	return EXIT_SUCCESS;
-// }
-
-// int addAdmin(Admin lAdmin, Admin admin)
-// {
-// 	Admin var = lAdmin;
-
-// 	while (var!=NULL)
-// 	{
-
-// 		if (isEqualAdmin(var, admin)==EXIT_SUCCESS)
-// 		{
-// 			return EXIT_FAILURE;
-// 		}
-
-// 		if(var->next_admin==NULL)
-// 		{
-// 			var->next_admin= admin;
-// 		}
-// 		var=var->next_admin;
-
-// 	}
-// 	return EXIT_SUCCESS;
-// }
-
-// lData create_basic_data()
-// {
-
-// 	lData Data= init_data(), data=Data;
-// 	char** uuid= (char*) calloc (99*UUID_SIZE, sizeof(char));
-// 	int rands[99];
-// 	int i,j;
-
-// 	for(i=0; i< 99; i++)
-// 	{
-// 		uuid_gen(uuid[i]);
-
-// 		for(j=0; j<i; j++)
-// 		{
-// 			if(strcmp(uuid[i], uuid[j])==0)
-// 			{
-// 				uuid_gen(uuid[i]);
-// 				j=0;
-// 			}
-// 		}
-// 	}
-
-// 	for (i = 0; i < 99; i++)
-// 	{
-// 		rands[i]=(rand() % 100);
-
-// 		for (j = 0; j < i; j++)
-// 		{
-// 			if (rands[i] == rands[j])
-// 			{
-// 				rands[i] = (rand() % 100);
-// 				j = 0;
-// 			}
-// 		}
-// 	}
-
-// 	for(i=0; i<99; i++)
-// 	{
-// 		data->departement=create_departement(departement[i], uuid[i], i+1, rands[i]);
-// 		data->next_departement=init_data();
-// 		data=data->next_departement;
-// 	}
-
-// 	free(uuid);
-
-// 	dump_basic_data(Data);
-// 	return Data;
-// }
-// Admin create_admin(Admin liste_admin, char* pass, char *code_agence, char *code_departement)
-// {
-// 	Admin admin=init_admin();
-
-// 	if(!uuid_gen(admin->uuid_admin))
-// 	{
-// 		fail("Failed to create a new admin: uuid generator error");
-// 		return NULL;
-// 	}
-
-// 	admin->login_admin=create_admin_login(pass, code_agence, code_departement);
-
-// 	assert(addAdmin(liste_admin, admin)==EXIT_SUCCESS);
-
-// 	return admin;
-// }
-
-// departement create_departement( char* nom_departement, char* uuid, int code_postale, int code_departement)
-// {
-// 	departement_size_t size;
-// 	size.nom_departement=strlen(nom_departement);
-// 	char code[2];
-// 	code[0]= 48 + code_departement/10;
-// 	code[1]= 48 + code_departement % 10;
-// 	departement departement= init_departement_arg(size, uuid, code_postale, nom_departement, code );
-
-// 	return departement;
-
-// }
-
-// Agence create_agence(char* uuid, char* indicatif, int code_agence)
-// {
-// 	Agence agence=init_agence();
-
-// }
-/*
-Admin new_admin()
+login_t* bank_login_add(login_t* list, login_t* login)
 {
-	Admin admin = init_admin();
+	if(list==NULL && login!=NULL)
+	{
+		return login;
+	}
+	if(list!=NULL && login==NULL)
+	{
+		return list;
+	}
+	if(list==NULL)
+	{
+		return NULL;
+	}
 
-	uuid_gen(admin->uuid_admin);
+	login->next=list;
 
-	return admin;
+	return login;
+
 }
 
-departement new_departement(char *nom_departement, char *code_postale)
+/*----------------------FREE----------------------*/
+
+void free_login(login_t *login)
 {
-	departement departement = init_departement();
-
-	uuid_gen(departement->uuid_departement);
-	strcpy(departement->code_postale, code_postale);
-	strcpy(departement->nom_departement, nom_departement);
-
-	return departement;
+	memset(&(login->login_key[0]), 0, strlen(login->login_key));
+	memset(&(login->login_id[0]), 0, strlen(login->login_id));
+	login->status = BANK_OBJECT_NULL;
+	if (login->uuid != NULL)
+	{
+		memset(&(login->uuid[0]), 0, strlen(login->uuid));
+	}
 }
 
-*/
+
+void free_admin(admin_t *admin)
+{
+	free_login(admin->login);
+	admin->login = NULL;
+	admin->bank = NULL;
+}
+
+void free_individual(individual_t *individual)
+{
+	memset(&(individual->uuid[0]), 0, strlen(individual->uuid));
+	memset(&(individual->birthdate[0]), 0, strlen(individual->birthdate));
+	memset(&(individual->joineddate[0]), 0, strlen(individual->joineddate));
+	memset(&(individual->mobile_phone[0]), 0, strlen(individual->mobile_phone));
+	memset(&(individual->home_phone[0]), 0, strlen(individual->home_phone));
+
+	free(individual->address_no1);
+	free(individual->address_no2);
+	free(individual->city);
+	free(individual->email);
+	free(individual->firstname);
+	free(individual->lastname);
+	individual->status = BANK_OBJECT_NULL;
+	individual->agency = NULL;
+	individual->bank_account[0] = NULL;
+	individual->bank_account[1] = NULL;
+	individual->bank_account[2] = NULL;
+	individual->bank_account[3] = NULL;
+	individual->login = NULL;
+	individual->next = NULL;
+
+	individual->zip_code = 0;
+}
+
+void free_agency(agency_t *agency)
+{
+	free(agency->agency_address);
+
+	memset(&(agency->uuid_agency[0]), 0, strlen(agency->uuid_agency));
+	memset(&(agency->agency_code[0]), 0, strlen(agency->agency_code));
+	memset(&(agency->agency_id[0]), 0, strlen(agency->agency_id));
+	agency->state = NULL;
+	agency->employees = NULL;
+	agency->individuals = NULL;
+	agency->logins = NULL;
+	agency->bank_accounts = NULL;
+	agency->next = NULL;
+
+	agency->status = BANK_OBJECT_NULL;
+}
+
+void free_state(state_t *state)
+{
+	// memset(&(state->uuid_state[0]), 0, strlen(state->uuid_state));
+	// memset(&(state->state_code[0]), 0, strlen(state->state_code));
+	// state->status=BANK_OBJECT_NULL;
+	state->agencies = NULL;
+	// state->zip_code=0;
+	// state->next=NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+/*-----------------------------*/
+void bank_agency_changed(agency_t* agency)
+{
+	if(agency!=NULL)
+	{
+		agency->changes=BANK_OBJECT_CHANGED;
+	}
+
+}
+void bank_agency_set_status(agency_t* agency, status_type status)
+{
+	if (agency != NULL)
+	{
+		agency->status = status;
+	}
+}
+void bank_individual_changed(individual_t* individual)
+{
+	if (individual != NULL)
+	{
+		individual->changes = BANK_OBJECT_CHANGED;
+	}
+}
+
+int bank_agency_export_info(agency_t* agency)
+{
+	char txtfile[18];
+
+	printf("\nData are saved to agency_%s.txt", bank_agency_get(agency, BANK_AGENCY_ID));
+
+	sprintf(txtfile, "agency_%s.txt", bank_agency_get(agency, BANK_AGENCY_ID));
+	txtfile[17] = '\0';
+
+	FILE *fp = fopen(txtfile, "w");
+
+	if (!fp)
+	{
+		perror("Text file creation");
+		printf("\nfailed to save it into a text file");
+		return EXIT_FAILURE;
+	}
+	fprintf(fp, "\nAgency state:%02d-%s.", agency->state->zip_code, french_states[agency->state->zip_code - 1]);
+	fprintf(fp, "\nAgency id:%s", bank_agency_get(agency, BANK_AGENCY_ID));
+	fprintf(fp, "\nAgency address:%s", bank_agency_get(agency, BANK_AGENCY_ADDRESS));
+	fprintf(fp, "\nAgency ID will be used to find it and append data to it as employees etc...\n");
+
+	fclose(fp);
+	clear();
+
+	return EXIT_SUCCESS;
+}
+
+
+int bank_employee_export_info(employee_t* employee)
+{
+	char txtfile[25];
+
+	printf("\nData are saved to employee_%s.txt", employee->personal_data->login->login_id);
+
+	sprintf(txtfile, "employee_%s.txt", employee->personal_data->login->login_id);
+
+	txtfile[24] = '\0';
+
+	FILE *fp = fopen(txtfile, "w");
+
+	if (!fp)
+	{
+		perror("Text file creation");
+		printf("\nfailed to save it into a text file");
+		return EXIT_FAILURE;
+	}
+	fprintf(fp, "\nState:%02d %s", employee->agency->state->zip_code, french_states[employee->agency->state->zip_code - 1]);
+
+	fprintf(fp, "\nAgency: %s", employee->agency->agency_address);
+
+	fprintf(fp, "\nEmployee login ID:%s", employee->personal_data->login->login_id);
+
+	fclose(fp);
+
+	clear();
+
+	return EXIT_SUCCESS;
+}
+
+int clear()
+{
+
+	while (getchar() != '\n');
+	return 1;
+}
+
+int modify_individual(individual_t *individual, char *email, char *address_no1, char *city, int zipcode, char *address_no2, char *mobile_phone, char *home_phone, char *id_card_no)
+{
+	if (individual == NULL || bank_individual_is_status(individual, BANK_OBJECT_INIT))
+	{
+		fprintf(stderr, "error modify_individual\n");
+		return EXIT_FAILURE;
+	}
+
+	if (email != NULL)
+	{
+		bank_individual_set_email(individual, email);
+	}
+	if (address_no1 != NULL)
+	{
+		bank_individual_set_address_no1(individual, address_no1);
+	}
+	if (address_no2 != NULL)
+	{
+		bank_individual_set_address_no2(individual, address_no1);
+	}
+	if (city != NULL)
+	{
+		bank_individual_set_city(individual, city);
+	}
+	if (mobile_phone != NULL)
+	{
+		bank_individual_set_mobilephone(individual, mobile_phone);
+	}
+	if (home_phone != NULL)
+	{
+		bank_individual_set_home_phone(individual, home_phone);
+	}
+	if (id_card_no != NULL)
+	{
+		bank_individual_set_idcard(individual, id_card_no);
+	}
+	if (zipcode != 0)
+	{
+		bank_individual_set_zipcode(individual, zipcode);
+	}
+	return EXIT_SUCCESS;
+}
+
+login_t *create_login(agency_t *agency, char *pass)
+{
+	if (agency == NULL || bank_agency_is_status(agency, BANK_OBJECT_INIT))
+	{
+		fprintf(stderr, "error create_login\n");
+		return NULL;
+	}
+
+	login_t *login = bank_login_generate(agency);
+
+	bank_login_set_key(login, pass);
+
+	encrypt_login_pass(login);
+
+	memset(&(pass[0]), 0, strlen(pass));
+
+	return login;
+}
+
+individual_t *create_individual(agency_t *agency, login_t *login, char sex, char *lastname, char *firstname, char *birthdate, char *email, char *address_no1, char *city, int zipcode, char *address_no2, char *mobile_phone, char *home_phone, char *id_card_no)
+{
+	individual_t *individual = bank_individual(0);
+	bank_individual_set_uuid(individual);
+	bank_individual_set_sex(individual, sex);
+	bank_individual_set_firstname(individual, firstname);
+	bank_individual_set_lastname(individual, lastname);
+	bank_individual_set_birthdate(individual, birthdate);
+	bank_individual_set_email(individual, email);
+	bank_individual_set_address_no1(individual, address_no1);
+
+	if (address_no2 != NULL)
+		bank_individual_set_address_no2(individual, address_no2);
+
+	bank_individual_set_city(individual, city);
+	bank_individual_set_zipcode(individual, zipcode);
+	bank_individual_set_mobilephone(individual, mobile_phone);
+
+	if (home_phone != NULL)
+		bank_individual_set_home_phone(individual, home_phone);
+
+	bank_individual_set_idcard(individual, id_card_no);
+
+	time_t timeoftheday;
+
+	time(&timeoftheday);
+
+	bank_individual_set_joindate(individual, ctime(&timeoftheday));
+
+	bank_individual_changed(individual);
+
+	if (login != NULL)
+	{
+		bank_individual_set_login(individual, login);
+	}
+
+	if (agency == NULL)
+	{
+		return individual;
+	}
+
+	bank_individual_set_agency(individual, agency);
+
+	if (login == NULL)
+	{
+		bank_individual_set_new_login(individual, birthdate);
+	}
+
+	if (bank_agency_individual_add(individual))
+	{
+		fprintf(stderr, "error adding individual to agency\n");
+		bank_individual_remove_agency(individual);
+	}
+
+	return individual;
+}
+
+individual_t *scan_individual(login_t *login, agency_t *agency)
+{
+
+	printf("\nPlease enter the following info:");
+
+	char sex, firstname[30], lastname[30], birthdate[DATE_SIZE], email[100], city[30], address_no1[100], address_no2[60], mobile_phone[PHONE_SIZE], home_phone[PHONE_SIZE], id_card_no[25];
+	int zipcode;
+
+	do
+	{
+		printf("\nsex: M or F: ");
+	} while ((!scanf(" %c", &sex) || (sex != 'M' && sex != 'F')) && clear());
+
+	do
+	{
+		printf("\nnote: firstname and lastname must not exceed 30 caracters nor contain whitespaces,");
+		printf("\n      use '-' for spaces instead");
+
+		printf("\nFirstname: ");
+	} while (!scanf(" %30s", firstname) && clear());
+
+	do
+	{
+
+		printf("\nLastname: ");
+	} while (!scanf(" %30s", lastname) && clear());
+
+	do
+	{
+		printf("\nnote: date must be entered in this format DDMMYYYY");
+		printf("\nBirthdate: ");
+	} while (!scanf(" %8[0-9]", birthdate) && clear());
+
+	do
+	{
+		printf("\nEmail: ");
+	} while (!scanf(" %80s", email) && clear());
+
+	printf("\n\t---Address---");
+
+	do
+	{
+		printf("\nStreet: ");
+	} while (!scanf(" %80s", address_no1) && clear());
+
+	clear();
+
+	do
+	{
+		printf("\naddress line 2:");
+	} while (!scanf(" %40s", address_no2) && clear());
+
+	clear();
+
+	do
+	{
+		printf("\nCity: ");
+	} while (!scanf(" %25s", city) && clear());
+	do
+	{
+		printf("\nzipcode: ");
+	} while (!scanf(" %5d", &zipcode) && clear());
+	do
+	{
+		printf("\nMobile phone: ");
+	} while (!scanf(" %11[0-9]", mobile_phone) && clear());
+	do
+	{
+		printf("\nHome phone: ");
+	} while (!scanf(" %11[0-9]", home_phone) && clear());
+	do
+	{
+		printf("\nId Card number: ");
+	} while (!scanf(" %24s", id_card_no) && clear());
+
+	return create_individual(agency, login, sex, lastname, firstname, birthdate, email, address_no1, city, zipcode, address_no2, mobile_phone, home_phone, id_card_no);
+}

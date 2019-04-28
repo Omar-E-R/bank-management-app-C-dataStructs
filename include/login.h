@@ -15,13 +15,7 @@
 
 typedef struct login_t login_t;
 
-typedef struct login_size
-{
-	size_t id, key;
-
-} login_size_t ;
-
-int validate_login(login_t* private, login_t* user);
+int validate_login(login_t* private_log, login_t* user_log);
 int encrypt_login_pass(login_t* login);
 
 // login_t* init_login();

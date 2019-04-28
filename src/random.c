@@ -61,37 +61,6 @@ static int randd(int *rand_tab)
 	return EXIT_SUCCESS;
 }
 
-static unsigned long mix(unsigned long a, unsigned long b, unsigned long c)
-{
-	a = a - b;
-	a = a - c;
-	a = a ^ (c >> 13);
-	b = b - c;
-	b = b - a;
-	b = b ^ (a << 8);
-	c = c - a;
-	c = c - b;
-	c = c ^ (b >> 13);
-	a = a - b;
-	a = a - c;
-	a = a ^ (c >> 12);
-	b = b - c;
-	b = b - a;
-	b = b ^ (a << 16);
-	c = c - a;
-	c = c - b;
-	c = c ^ (b >> 5);
-	a = a - b;
-	a = a - c;
-	a = a ^ (c >> 3);
-	b = b - c;
-	b = b - a;
-	b = b ^ (a << 10);
-	c = c - a;
-	c = c - b;
-	c = c ^ (b >> 15);
-	return c;
-}
 
 static char* to_array(Arbre arbre)
 {
@@ -332,11 +301,11 @@ char* agency_id_generator()
 	SIZE_RAND_DUP=3;
 	int id[5];
 
-	size_t i=0, errors=0;
+	size_t i=0;
 
 	if(randd(id))
 	{
-		fprintf(stderr, "Error generating agency id no: %d",i);
+		fprintf(stderr, "Error generating agency id no: %d",(int)i);
 		return NULL;
 	}
 	return arraytostring(id);

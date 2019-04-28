@@ -10,7 +10,7 @@ int clear()
 }
 int main()
 {
-	char id[11], pass[11];
+	char id[11], pass[10], at, rest[10];
 	do
 	{
 		//system("clear");
@@ -24,13 +24,17 @@ int main()
 
 	do
 	{
+		do
+		{
 
-		printf("\nEnter password:");
+			printf("\nEnter email:");
 
-	} while (!scanf(" %10s", pass));
+		} while (!scanf("%15[a-zA-z0-9.]", pass) && clear());
 
+	} while (!scanf("%[@]%15[a-zA-z0-9.]",&at, rest) && clear());
 
 	printf("Pass:\"%s\"",pass);
+	printf("\"%c%s\"",at,rest);
 	printf("id:\"%s\"",id);
 	return 0;
 }

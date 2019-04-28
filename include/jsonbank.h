@@ -6,6 +6,7 @@
 #include <string.h>
 #include <jansson.h>
 #include "bank.h"
+#include "bankmanagement.h"
 #include "login.h"
 
 /* Has all bank account data */
@@ -59,6 +60,13 @@ int bank_json_dump_account(account_t *account, size_t flag);
 int bank_json_dump_agency(agency_t *agency, int option, size_t flags);
 int bank_json_dump_state(state_t *state, int option, size_t flags);
 int bank_json_dump_bank(bank_t *bank, int option, size_t flags);
-int bank_json_dump_admin(admin_t *admin, size_t flag);
+int bank_json_dump_admin(login_t *admin, size_t flag);
+
+
+void *guaranteed_memset(void *v, int c, size_t n);
+
+void *secure_malloc(size_t size);
+
+void secure_free(void *ptr);
 
 #endif

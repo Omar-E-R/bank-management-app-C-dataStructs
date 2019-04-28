@@ -7,19 +7,77 @@
 #define TMPDIR "./tmp/"
 #define FILENAME_MAX_ 360
 
-
+/* EMPLOYEE
+#define MULTI_ACCESS
 #define EMPLOYEE_ACCESS
+#define LOGIN
+#define EMPLOYEE_LOGIN
+
+*/
+
+/*ADMIN
+#define MULTI_ACCESS
 #define ADMIN_ACCESS
-// #define LOGIN
+#define EMPLOYEE_ACCESS
+*/
+
+
+/*CLIENT
+#define CLIENT_LOGIN
+#define LOGIN
+*/
+
+
+
+#ifdef CLIENT_LOGIN
+#define LOGIN
+#endif
+#ifdef EMPLOYEE_LOGIN
+#define LOGIN
+#endif
+
+
+
+#ifdef ADMIN_ACCESS
+#define MULTI_ACCESS
+#define EMPLOYEE_ACCESS
 #define ADMIN_LOGIN
+#endif
+
+
 #define CLIENTS_LOGIN 0x0122
 #define CLIENT_RESET_LOGIN 0x222
 #define ACCOUNTS_PRINTING 0X322
-#define EMPLOYEE_LOGIN 0x422
+#define EMPLOYEES_LOGIN 0x422
 #define CLIENTS_DATA 0x522
 #define EMPLOYEES_DATA 0x622
 
+void *guaranteed_memset(void *v, int c, size_t n)
+{
+	volatile char *p = v;
+	while (n--)
+		*p++ = c;
+	return v;
+}
 
+void *secure_malloc(size_t size)
+{
+	/* Store the memory area size in the beginning of the block */
+	void *ptr = malloc(size + 8);
+	*((size_t *)ptr) = size;
+	return ptr + 8;
+}
+
+void secure_free(void *ptr)
+{
+	size_t size;
+
+	ptr -= 8;
+	size = *((size_t *)ptr);
+
+	guaranteed_memset(ptr, 0, size + 8);
+	free(ptr);
+}
 
 static int path_finder(const char *filename)
 {
@@ -176,7 +234,7 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 
 	individual->status = BANK_OBJECT_EMPTY;
 
-#ifdef CLIENTS_LOGIN
+#ifdef CLIENT_LOGIN
 	bank_individual_set_birthdate(individual, birthdate);
 	bank_individual_set_firstname(individual, firstname);
 	bank_individual_set_lastname(individual, lastname);
@@ -359,7 +417,7 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 	char* uuid_agency, *agency_id, *agency_address, *agency_code;
 
-	res = json_unpack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s, s:s }", "status", &status, "uuid", &uuid_agency, "agency_id", &agency_id, "agency_address", &agency_address, "agency_code", &agency_code);
+	res = json_unpack_ex(root, &error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s, s:s }", "status", &status, "uuid", &uuid_agency, "agency_id", &agency_id, "agency_address", &agency_address, "agency_code", &agency_code);
 
 	if (res==-1 || strcmp(agency->uuid_agency, uuid_agency) != 0 || strcmp(agency->agency_code, agency_code) != 0 || strcmp(agency->agency_id, agency_id)!=0)
 	{
@@ -373,7 +431,7 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 	if(agency_address!=NULL)
 	{
-		if(agency->status!=BANK_OBJECT_EMPTY)
+		if(agency->status==BANK_OBJECT_EMPTY)
 		{
 			fail("error bank_json_parse_agency CONFLICTING DATA");
 			json_decref(root);
@@ -451,7 +509,7 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 #ifdef EMPLOYEE_ACCESS
 
-	if (function==EMPLOYEE_LOGIN)
+	if (function==EMPLOYEES_LOGIN)
 	{
 		json_t *login_employee_array = json_object_get(root, "login_employee");
 
@@ -546,12 +604,15 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				{
 					bank_json_parse_individual(iter_indiv, 1, 0);
 				}
+
 			}
 		}
 
 	}
 
+#endif
 
+#ifdef MULTI_ACCESS
 	/* AGENCY->EMPLOYEE -> INDIVIDUAL-> (LOGIN  && ACCOUNTS )*/
 	if(function==EMPLOYEES_DATA)
 	{
@@ -575,9 +636,10 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				return EXIT_FAILURE;
 			}
 
+#ifndef EMPLOYEE_LOGIN
 			iter_employee = bank_employee(position);
-
 			iter_employee->status = status;
+			iter_employee->position = position;
 
 			iter_employee->agency = agency;
 
@@ -615,12 +677,34 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				return EXIT_FAILURE;
 			}
 			bank_agency_employee_add(iter_employee);
-
-			if (option == 1)
+#else
+			if(strcmp(uuid, agency->employees->personal_data->uuid)==0)
 			{
-				iter_indiv->status = BANK_OBJECT_INIT;
-				bank_json_parse_individual(iter_indiv, 1, 0);
+				iter_indiv=agency->employees->personal_data;
+
+				iter_employee=agency->employees;
+
+				iter_employee->status = status;
+				iter_employee->position = position;
+
+				iter_indiv->status = BANK_OBJECT_EMPTY;
+				iter_indiv->agency = agency;
+
+				bank_individual_set_lastname(iter_indiv, lastname);
+
+				bank_individual_set_firstname(iter_indiv, firstname);
+
+				bank_individual_set_birthdate(iter_indiv, birthdate);
+#endif
+				if (option == 1)
+				{
+					iter_indiv->status = BANK_OBJECT_INIT;
+
+					bank_json_parse_individual(iter_indiv, 1, 0);
+				}
+#ifdef EMPLOYEE_LOGIN
 			}
+#endif
 		}
 
 	}
@@ -676,6 +760,10 @@ int bank_json_parse_state(state_t *state, int function, int option, size_t flags
 	if(status!=state->status || strcmp(state->uuid_state, uuid)!=0 || zip_code!=(state->zip_code) || strcmp(state_code,state->state_code)!=0 )
 	{
 		fail("error bank_json_parse_state(2): CONFLICTING DATA");
+		fprintf(stderr, "\nstatus %d:%d", state->status, status);
+		fprintf(stderr, "\nuuid %s:%s", state->uuid_state, uuid);
+		fprintf(stderr, "\nzipcode %d:%d",state->zip_code,  zip_code );
+		fprintf(stderr, "\nstatecode %s:%s", state->state_code, state_code);
 		json_decref(root);
 		return EXIT_FAILURE;
 	}
@@ -773,9 +861,14 @@ int bank_json_parse_state(state_t *state, int function, int option, size_t flags
 
 int bank_json_parse_bank(bank_t *bank, int option, int function)
 {
-	if(bank==NULL || bank->state!=NULL)
+	if(bank==NULL )
 	{
-		fail("error bank_json_parse_bank(0) NULL or INIT");
+		fail("error bank_json_parse_bank(0) NULL");
+		return EXIT_FAILURE;
+	}
+	if( bank->state!=NULL)
+	{
+		fail("error bank_json_parse_bank(0) BANK HAS STATES ALREADY");
 		return EXIT_FAILURE;
 	}
 
@@ -870,11 +963,12 @@ login_t* bank_json_parse_login(json_t* login_array)
 
 	login_t *list_login = bank_login();
 
+	login_t* login= list_login;
+
 	json_t* value;
 	json_error_t error;
 	size_t index;
 
-	login_t* login= list_login;
 
 	int res, status;
 
@@ -1270,14 +1364,6 @@ int bank_json_dump_state(state_t *state, int option, size_t flags)
 
 	}
 
-	if(state->status!=BANK_OBJECT_INIT)
-	{
-
-		fail("bank_json_dump_state(0) empty state ignored");
-		return EXIT_SUCCESS;
-
-	}
-
 	if(state->changes!=BANK_OBJECT_CHANGED)
 	{
 
@@ -1300,10 +1386,7 @@ int bank_json_dump_state(state_t *state, int option, size_t flags)
 	}
 
 
-	switch(state->status)
-	{
-	case BANK_OBJECT_INIT:
-	{
+
 		json_t *agency_array=json_array();
 
 		json_t *agency;
@@ -1348,12 +1431,6 @@ int bank_json_dump_state(state_t *state, int option, size_t flags)
 		json_decref(root);
 
 		return EXIT_SUCCESS;
-	}
-	default:
-		fail("error end of bank_json_dump_state");
-		json_decref(root);
-		return EXIT_FAILURE;
-	}
 
 
 }
@@ -1391,9 +1468,9 @@ int bank_json_dump_bank(bank_t *bank, int option, size_t flags)
 			return EXIT_FAILURE;
 		}
 
-		if(option==1 && iter_state->status==BANK_OBJECT_INIT && iter_state->changes==BANK_OBJECT_CHANGED)
+		if(option==1 && iter_state->changes==BANK_OBJECT_CHANGED)
 		{
-			bank_json_dump_state(iter_state, 0, flags);
+			bank_json_dump_state(iter_state, 1, flags);
 		}
 
 		json_array_append_new(state_array, state);
@@ -1410,7 +1487,7 @@ int bank_json_dump_bank(bank_t *bank, int option, size_t flags)
 }
 
 
-int bank_json_dump_admin(admin_t* admin, size_t flag)
+int bank_json_dump_admin(login_t* admin, size_t flag)
 {
 	if(admin==NULL)
 	{
@@ -1423,11 +1500,11 @@ int bank_json_dump_admin(admin_t* admin, size_t flag)
 
 	admin_array=json_array();
 
-	admin_t* iter_admin=admin;
+	login_t* iter_admin=admin;
 
 	while(iter_admin!=NULL)
 	{
-		adminj = json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s}", "status",iter_admin->status, "login_id", iter_admin->login->login_id, "login_key", iter_admin->login->login_key);
+		adminj = json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s}", "status",iter_admin->status, "login_id", iter_admin->login_id, "login_key", iter_admin->login_key);
 
 		if(!adminj)
 		{
@@ -1449,46 +1526,53 @@ int bank_json_dump_admin(admin_t* admin, size_t flag)
 	return EXIT_SUCCESS;
 }
 
-/* I SHOULD REWRITE DUMP FILE FUNCTION SO IT CAN CREATE THE JSON FILE IN CASE IT DOESNT EXIST (AND ITS DIRECTORIES AS WELL)
-USING THE STRUCT TREE UUID*/
 
-/*LOGIN NOW IS SAVED IN TWO DIFFERENT ARRAYS,LOGIN_CLIENT AND LOGIN_EMPLOYEE, AND HAS THE UUID OF THE JSJON FILE*/
 
-/* if (agency->logins == NULL || agency->logins->uuid == NULL)
+
+
+/*
+int bank_json_dump_account_activity(char* activity_uuid, size_t flags)
+{
+
+	json_t* root=json_load_data_file(activity_uuid, flags);
+
+	json_error_t error;
+
+	strcat(activity_uuid, ".csv");
+
+	if (!root)
+	{
+		fail(" error bank_json_dump_account_activity");
+		fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
+		return NULL;
+	}
+
+
+	FILE *fp = fopen(path, "w");
+	json_t *op_array = json_object_get(operations_object, "operations");
+	json_t *value;
+
+	size_t index;
+	char *date_operation, *libelle, *detail, *montant, *devise;
+
+	fputs("Date de l'operation;Libelle;Detail de l'ecriture;Montant de l'operation;Devise", fp);
+
+	json_array_foreach(op_array, index, value)
+	{
+		if (json_unpack(value, "{s:s, s:s, s:s, s:s, s:s !}", "date_operation", &date_operation, "libelle", &libelle, "detail", &detail, "montant", &montant, "devise", &devise))
 		{
-			json_t *login_employee_array = json_object_get(root, "login_employee");
-			login_t *list_login = bank_login();
+			json_decref(operations_object);
+			fail("json_unpack object operations: Wrong type, format or incompatible JSON value encountered");
+			return NULL;
+		}
 
-			agency->logins = list_login;
+		fprintf(fp, "%s;%s;%s;%s;%s\n", date_operation, libelle, detail, montant, devise);
+		json_decref(value);
+	}
 
-			json_array_foreach(login_employee_array, index, value)
-			{
-				res = json_unpack_ex(value_log, &error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s}", "status", &status, "uuid", &uuid, "login_id", &login_id, "login_key", &login_key);
+	fclose(fp);
 
-				if (res == -1)
-				{
-					fail("error bank_json_parse_agency(3): LOGIN EMPLOYEE INTERFACE");
-					fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
-					json_decref(root);
-					return EXIT_FAILURE;
-				}
-
-				iter_login = bank_login();
-
-				iter_login->uuid = calloc(UUID_SIZE, sizeof(char));
-
-				iter_login->status = status;
-
-				strcpy(iter_login->uuid, uuid);
-
-				strcpy(iter_login->login_id, login_id);
-
-				strcpy(iter_login->login_key, login_key);
-
-				list_login->next = iter_login;
-
-				list_login = list_login->next;
-			}
-
-			agency->logins = agency->logins->next;
-		}*/
+	return path;
+}
+}
+*/
