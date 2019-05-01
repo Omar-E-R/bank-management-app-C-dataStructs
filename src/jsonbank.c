@@ -39,9 +39,8 @@
 
 
 #ifdef ADMIN_ACCESS
-#define MULTI_ACCESS
 #define EMPLOYEE_ACCESS
-#define ADMIN_LOGIN
+#define MULTI_ACCESS
 #endif
 
 
@@ -209,9 +208,9 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 	json_t *root = json_load_data_file(path, flags);
 
 	char *uuid, *lastname, *firstname, *birthdate, *email, *address_no1, *address_no2, *city, *mobile_phone, *home_phone, *id_card_no, *joineddate;
-	int res, status, zip_code, sex, flag, uuid_size, bd_size, jd_size;
+	int res, status, zip_code, sex, flag;
 
-	res=json_unpack_ex(root, &error, JSON_ALLOW_NUL, "{ s:i, s:s%, s:i, s:s, s:s, s:s%, s:s, s:s, s:s, s:i, s:s, s:s, s:s, s:s, s:s%, s:i}", "status", &status, "uuid", &uuid, &uuid_size,"sex", &sex, "lastname", &lastname, "firstname", &firstname, "birthdate", &birthdate, &bd_size, "email", &email, "address_no1", &address_no1, "city", &city, "zipcode", &zip_code, "address_no2", &address_no2, "mobilephone", &mobile_phone, "homephone", &home_phone, "id_card_no", &id_card_no, "joineddate", &joineddate, &jd_size, "flag", &flag);
+	res=json_unpack_ex(root, &error, JSON_ALLOW_NUL, "{ s:i, s:s, s:i, s:s, s:s, s:s, s:s, s:s, s:s, s:i, s:s, s:s, s:s, s:s, s:s, s:i}", "status", &status, "uuid", &uuid, "sex", &sex, "lastname", &lastname, "firstname", &firstname, "birthdate", &birthdate, "email", &email, "address_no1", &address_no1, "city", &city, "zipcode", &zip_code, "address_no2", &address_no2, "mobilephone", &mobile_phone, "homephone", &home_phone, "id_card_no", &id_card_no, "joineddate", &joineddate, "flag", &flag);
 
 	if(res==-1 )
 	{
@@ -223,7 +222,7 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 
 #ifdef ADMIN_ACCESS
 
-	if (strcmp(individual->uuid, uuid) != 0 || strcmp(individual->firstname, firstname) != 0 || strcmp(individual->lastname, lastname) != 0 || strcmp(individual->birthdate, birthdate) != 0 || uuid_size != UUID_SIZE - 1 || bd_size != DATE_SIZE - 1 || jd_size != DATE_JOIN_SIZE - 1 || (sex != 'M' && sex != 'F'))
+	if (strcmp(individual->uuid, uuid) != 0 || strcmp(individual->firstname, firstname) != 0 || strcmp(individual->lastname, lastname) != 0 || strcmp(individual->birthdate, birthdate) != 0 || (sex != 'M' && sex != 'F'))
 	{
 		fail("error bank_json_parse_individual(2): ADMIN ACCESS VERIFICATION");
 		json_decref(root);
@@ -273,25 +272,15 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 	json_array_foreach(account_array, index, value)
 	{
 
-		res=json_unpack_ex(value, &error, 0, "{s:s%}", "uuid_account", &uuid , &uuid_size);
+		res=json_unpack_ex(value, &error, 0, "{s:s}", "uuid_account", &uuid);
 
-		if (res ==-1 || uuid_size!=(UUID_SIZE-1))
+		if (res ==-1)
 		{
 			fail("error bank_json_parse_individual(3)");
 			fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
 			json_decref(root);
 			return EXIT_FAILURE;
 		}
-
-#ifdef ADMIN_ACCESS
-
-		if(uuid_size != UUID_SIZE -1 )
-		{
-			fail("error bank_json_parse_individual(3): ADMIN ACCESS VERIFICATION");
-			json_decref(root);
-			return EXIT_FAILURE;
-		}
-#endif
 
 		individual->bank_account[index]=bank_account(BANK_ACCOUNT_EMPTY, BANK_OBJECT_NULL);
 
@@ -303,8 +292,7 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 
 		if(option==1)
 		{
-			bank_json_parse_account(individual->bank_account[index], JSON_ALLOW_NUL);
-			bank_agency_account_add(individual->bank_account[index]);
+			bank_json_parse_account(individual->bank_account[index], 0, 0);
 		}
 	}
 
@@ -316,7 +304,7 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 
 
 
-int bank_json_parse_account(account_t *account, size_t flags)
+int bank_json_parse_account(account_t *account, int option, size_t flags)
 {
 	if (account == NULL || account->status != BANK_OBJECT_INIT)
 	{
@@ -340,7 +328,7 @@ int bank_json_parse_account(account_t *account, size_t flags)
 
 	json_t *root = json_load_data_file(path, flags);
 
-	char *uuid_account, *uuid_activity, *account_no, *iban;
+	char *uuid_account, *uuid, *uuid_activity, *account_no, *iban;
 	int res, status, account_type, bank_account_type;
 	double balance;
 
@@ -372,12 +360,42 @@ int bank_json_parse_account(account_t *account, size_t flags)
 
 	strcpy(account->uuid_activity, uuid_activity);
 
+	if(option==1)
+	{
+		json_t* holders_array=json_object_get(root, "holders");
+		json_t* value;
+		size_t index;
+
+
+		json_array_foreach(holders_array, index, value)
+		{
+
+			json_unpack(value,"{s:s}", "uuid_individual", &uuid);
+
+			account->account_holder[index]=bank_individual(account_type);
+
+			strcpy(account->account_holder[index]->uuid, uuid);
+
+			bank_json_parse_individual(account->account_holder[index],0 ,0);
+
+			account->account_holder[index]->bank_account[0]=account;
+		}
+	}
+
 	json_decref(root);
 
 	free(path);
 
 	return EXIT_SUCCESS;
 }
+
+
+
+
+
+
+
+
 
 
 int bank_json_parse_agency(agency_t *agency, int function, int option, size_t flags)
@@ -437,8 +455,7 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 			json_decref(root);
 			return EXIT_FAILURE;
 		}
-		json_decref(root);
-		return EXIT_SUCCESS;
+
 	}
 #endif
 
@@ -499,7 +516,17 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 			iter_account->agency = agency;
 
-			bank_agency_account_add(iter_account);
+			if(bank_agency_account_add(iter_account))
+			{
+				fail("error bank_json_parse_agency(6): ACCOUNTS INTERFACE");
+				json_decref(root);
+				return EXIT_FAILURE;
+			}
+
+			if(option==1)
+			{
+				bank_json_parse_account(iter_account, 1, JSON_ALLOW_NUL);
+			}
 		}
 		json_decref(root);
 		return EXIT_SUCCESS;
@@ -598,7 +625,12 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 				strcpy(iter_login->login_key, login_key);
 
-				bank_agency_individual_add(iter_indiv);
+				if(bank_agency_individual_add(iter_indiv))
+				{
+					fail("error bank_json_parse_agency(4): MANAGERS INTERFACE");
+					json_decref(root);
+					return EXIT_FAILURE;
+				}
 
 				if (option == 1)
 				{
@@ -638,12 +670,16 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 #ifndef EMPLOYEE_LOGIN
 			iter_employee = bank_employee(position);
+
 			iter_employee->status = status;
+
 			iter_employee->position = position;
 
 			iter_employee->agency = agency;
 
 			iter_indiv = bank_individual(BANK_ACCOUNT_EMPTY);
+
+			iter_employee->personal_data=iter_indiv;
 
 			iter_indiv->status = BANK_OBJECT_EMPTY;
 
@@ -664,9 +700,12 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				if (strcmp(iter_login->uuid, iter_indiv->uuid) == 0)
 				{
 					iter_indiv->login = iter_login;
+
 					free(iter_login->uuid);
+
 					break;
 				}
+
 				iter_login = iter_login->next;
 			}
 
@@ -676,7 +715,13 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				json_decref(root);
 				return EXIT_FAILURE;
 			}
-			bank_agency_employee_add(iter_employee);
+			if (bank_agency_employee_add(iter_employee) || bank_agency_individual_add(iter_indiv))
+			{
+				fail("error bank_json_parse_agency(8): MANAGERS INTERFACE");
+				json_decref(root);
+				return EXIT_FAILURE;
+
+			}
 #else
 			if(strcmp(uuid, agency->employees->personal_data->uuid)==0)
 			{
@@ -685,9 +730,11 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				iter_employee=agency->employees;
 
 				iter_employee->status = status;
+
 				iter_employee->position = position;
 
 				iter_indiv->status = BANK_OBJECT_EMPTY;
+
 				iter_indiv->agency = agency;
 
 				bank_individual_set_lastname(iter_indiv, lastname);
@@ -696,6 +743,8 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 				bank_individual_set_birthdate(iter_indiv, birthdate);
 #endif
+				iter_indiv->employee=iter_employee;
+
 				if (option == 1)
 				{
 					iter_indiv->status = BANK_OBJECT_INIT;
@@ -946,7 +995,10 @@ int bank_json_parse_bank(bank_t *bank, int option, int function)
 #else
 		if (option == 1)
 		{
-			bank_json_parse_state(iter_state, 0, 0, JSON_ALLOW_NUL);
+			if(bank_json_parse_state(iter_state, 0, 0, JSON_ALLOW_NUL))
+			{
+				return EXIT_FAILURE;
+			}
 		}
 
 #endif
@@ -978,12 +1030,9 @@ login_t* bank_json_parse_login(json_t* login_array)
 
 	json_array_foreach(login_array, index, value)
 	{
-#ifdef ADMIN_LOGIN
-		res = json_unpack_ex(value, &error, JSON_ALLOW_NUL, "{s:i, s:s, s:s}", "status", &status, "login_id", &login_id, "login_key", &login_key);
-#else
-		res = json_unpack_ex(value, &error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s}", "status", &status, "uuid", &uuid, "login_id", &login_id, "login_key", &login_key);
 
-#endif
+		res = json_unpack_ex(value, &error, JSON_ALLOW_NUL, "{s:i, s?:s, s:s, s:s}", "status", &status, "uuid", &uuid, "login_id", &login_id, "login_key", &login_key);
+
 		if (res == -1)
 		{
 			fail("error bank_json_parse_agency(3): LOGIN INTERFACE");
@@ -994,10 +1043,13 @@ login_t* bank_json_parse_login(json_t* login_array)
 
 		iter_login = bank_login();
 
-#ifndef ADMIN_LOGIN
-		iter_login->uuid = calloc(UUID_SIZE, sizeof(char));
-		strcpy(iter_login->uuid, uuid);
-#endif
+		if(uuid!=NULL)
+		{
+			iter_login->uuid = calloc(UUID_SIZE, sizeof(char));
+			strcpy(iter_login->uuid, uuid);
+
+		}
+
 		iter_login->status = BANK_LOGIN_ENCRYPTED;
 
 

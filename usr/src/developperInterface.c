@@ -1,5 +1,6 @@
 
 #include<stdio.h>
+#include<string.h>
 #include<sys/time.h>
 #include "bankmanagement.h"
 
@@ -63,31 +64,33 @@ int main(int argc, char* argv[])
 
 	login_t *admin_logs;
 
-	static int userchoice, num=-1;
+	static int userchoice, choice=0,num=-1;
 
 	int admin_code[4]={1,9,9,6};
 
 	while(1)
 	{
-		printf("\nEnter q to quit or any other key to continue...");
-
-		if (getchar() == 'q')
+		if(choice==0)
 		{
-			bank_free_logins(admin_logs);
-			return 0;
+			printf("\nEnter q to quit or any other key to continue...");
+
+			if (getchar() == 'q')
+			{
+				bank_free_logins(admin_logs);
+				return 0;
+			}
+			printf("\n---------------------------DEVELOPPER-----------------------\n");
+			printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or q to exit:\n\n");
+			printf("1- Check if there is already an admin database\n");
+			printf("2- Create a new admin \n");
+			printf("3- Delete an admin\n");
+			printf("4- View all admins\n");
+
+			do
+			{
+				userchoice = getchar();
+			} while ((userchoice > '4' || userchoice < '1') && userchoice != 'q');
 		}
-		printf("\n---------------------------DEVELOPPER-----------------------\n");
-		printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or q to exit:\n\n");
-		printf("1- Check if there is already an admin database\n");
-		printf("2- Create a new admin \n");
-		printf("3- Delete an admin\n");
-		printf("4- View all admins\n");
-
-		do
-		{
-			userchoice = getchar();
-		} while ((userchoice > '4' || userchoice < '1') && userchoice != 'l');
-
 
 		switch (userchoice)
 		{
@@ -107,39 +110,62 @@ int main(int argc, char* argv[])
 					fscanf(fp, "%d", &num);
 					pclose(fp);
 
-					if (num == 1 || num==0)
+					if (num == 0 || (num == 1 && (admin_logs = bank_json_parse_admin()) == NULL) || (num == 1 && bank_login_get_id(admin_logs) == NULL))
 					{
-						admin_logs = bank_json_parse_admin();
+						num = 0;
 
-						if(admin_logs==NULL)
+
+						if(choice==0)
 						{
-							printf("ZERO admins were found, you can create one in menu #2\n");
-
+							printf("\n\n0 admins were found, you can create one in menu #2\n");
 							printf("\n Enter any key to back to main menu...");
+
+							getchar();
+							break;
+						}
+						printf("\n\n0 admins were found, this one will be the first:\n");
+						userchoice='2';
+
+						break;
+					}
+
+					if (num > 1)
+					{
+						printf("DATABASE has duplicates... exiting!\n");
+
+						exit(EXIT_FAILURE);
+					}
+					else
+					{
+						num=1;
+
+						if(choice==0)
+						{
+							printf("\n\nAdmins were found\n");
+
+							clear();
+
+							printf("\nTo exit this view enter any key...");
 
 							getchar();
 
 							break;
 						}
-
-						printf("\n\nAdmins were found\n");
-						clear();
-						printf("\nTo exit this view enter any key...");
-
-						getchar();
-
+						userchoice='2';
 						break;
 					}
-					if (num > 1)
-					{
-						printf("DATABASE has duplicates... exiting!\n");
-						exit(EXIT_FAILURE);
-					}
-
 					break;
 				}
 			case '2':
 				{
+					choice=0;
+
+					if (num == -1)
+					{
+						userchoice = '1';
+						choice = 1;
+						break;
+					}
 
 					login = bank_login();
 
@@ -180,13 +206,13 @@ int main(int argc, char* argv[])
 
 					if (c == 's')
 					{
-						char txtfile[23];
+						char txtfile[29];
 
 						printf("\nData are saved to admin_%s.txt", bank_login_get_id(login));
 
-						sprintf(txtfile, "admin_%s.txt", bank_login_get_id(login));
+						sprintf(txtfile, "./root/admin_%s.txt", bank_login_get_id(login));
 
-						txtfile[22] = '\0';
+						txtfile[28] = '\0';
 
 						FILE *fp = fopen(txtfile, "w");
 
@@ -199,29 +225,22 @@ int main(int argc, char* argv[])
 						fprintf(fp, "\nAdmin-ID: %10s.", bank_login_get_id(login));
 						fprintf(fp, "\nAdmin-KEY:%10s", pass);
 						fclose(fp);
-						printf("\nDONE\n");
-
 					}
 
 					bank_login_set_key(login, pass);
 
+					encrypt_login_pass(login);
 
-					if (num == -1 || num == 0)
+					if (num == 0)
 					{
-						admin_logs = bank_json_parse_admin();
-					}
-
-					if(admin_logs==NULL)
-					{
-
 						bank_json_dump_admin(login, JSON_ALLOW_NUL);
-
 					}
 					else
-					{
 						bank_json_dump_admin(bank_login_add(admin_logs, login), JSON_ALLOW_NUL);
-					}
 
+					printf("\nDONE\n");
+
+					clear();
 
 					printf("\nTo exit this view enter any key...");
 
@@ -231,6 +250,13 @@ int main(int argc, char* argv[])
 				}
 			default:
 				break;
+		}
+		if(userchoice=='q')
+		{
+			free_admin(admin);
+			free_login(login);
+			bank_free_logins(admin_logs);
+			return 0;
 		}
 	}
 	return 0;

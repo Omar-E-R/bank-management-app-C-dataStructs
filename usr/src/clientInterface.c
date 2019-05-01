@@ -9,7 +9,8 @@ int main(int argc, char *argv[])
 {
 	bank_t *data = bank();
 
-	int ag_code, st_code;
+	char ag_code[3], st_code[3];
+
 	json_set_alloc_funcs(secure_malloc, secure_free);
 	bank_json_parse_bank(data, 0, 0);
 
@@ -159,7 +160,9 @@ int main(int argc, char *argv[])
 			printf("2- View you personal informations\n");
 			printf("3- View your bank accounts\n");
 			printf("4- Export bank accounts activity in a CSV format\n");
-			printf("5- Reset your password\n");
+			printf("5- Transfer money\n");
+			printf("6- Money Deposit\n");
+			printf("7- Reset your password\n");
 
 			do
 			{
@@ -175,69 +178,7 @@ int main(int argc, char *argv[])
 			case '2':
 				break;
 			case '3':
-				//bank account type
-				switch (individual->bank_account[0]->bank_account_type)
-				{
-				case BANK_ACCOUNT_LDD:
-					printf("\n\t---LDD---\n");
-					break;
-				case BANK_ACCOUNT_LIVRETJEUNE:
-					printf("\n\t---Livretjeune---\n");
-					break;
-				case BANK_ACCOUNT_LIVRETA:
-					printf("\n\t---LivretA---\n");
-					break;
-				case BANK_ACCOUNT_COURANT:
-					printf("\n\t---Livretjeune---\n");
 
-					break;
-				case BANK_ACCOUNT_PEL:
-					printf("\n\t---PEL---\n");
-					break;
-				default:
-					break;
-				}
-
-				printf("\niban: %s\n", individual->bank_account[0]->iban);
-
-				printf("\nbalance= %lf euros\n", individual->bank_account[0]->account_balance);
-
-				printf("\nbank account number: %s\n", individual->bank_account[0]->account_no);
-
-				//account type
-				switch (individual->bank_account[0]->account_type)
-				{
-				case BANK_ACCOUNT_INDIVIDUAL:
-					printf("\naccount type: AN INDIVIDUAL BANK ACCOUNT\n");
-					break;
-				case BANK_ACCOUNT_SHARED:
-					printf("\naccount type: A SHARED BANK ACCOUNT\n");
-					break;
-				default:
-					break;
-				}
-
-				printf("\naddress line 1: %s\n", individual->address_no1);
-
-				printf("\naddress line 2: %s\n", individual->address_no2);
-
-				printf("\nbirthdate: %.2s/%.2s/%.4s\n", individual->birthdate, individual->birthdate + 2, individual->birthdate + 4);
-
-				printf("\ncity: %s\n", individual->city);
-
-				printf("\nemail: %s\n", individual->email);
-
-				printf("\nfirstname: %s\n", individual->firstname);
-
-				printf("\nlastname: %s\n", individual->lastname);
-
-				printf("\nclient since: %s\n", individual->joineddate);
-
-				printf("\nEnter any key to exit this view...");
-
-				getchar();
-
-				break;
 
 			case '4':
 				break;

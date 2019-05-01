@@ -1,0 +1,19 @@
+{
+                "status": 1,
+                "uuid": "a88d000f-ac2e-4377-ac0a-1957d17c19bb",
+                "sex": 77,
+                "lastname": "JEAN",
+                "firstname": "DUPONT",
+                "birthdate": "22061955",
+                "email": "ASD.ASDAS@SAD.COM",
+                "address_no1": "SADASDASDASD",
+                "city": "ASDSADDS",
+                "zipcode": 23213,
+                "address_no2": "ASDASD",
+                "mobilephone": "23213213",
+                "homephone": "213123",
+                "id_card_no": "3123213",
+                "joineddate": "Wed May  1 21:39:28 2019\n",
+                "flag": 2,
+                "accounts": []
+}

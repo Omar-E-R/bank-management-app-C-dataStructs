@@ -45,7 +45,7 @@ typedef struct bank_t bank_t;
 	} while (0)
 
 int bank_json_parse_individual(individual_t *individual, int option, size_t flags);
-int bank_json_parse_account(account_t *account, size_t flags);
+int bank_json_parse_account(account_t *account, int option, size_t flags);
 int bank_json_parse_agency(agency_t *agency, int function, int option, size_t flags);
 
 int bank_json_parse_state(state_t *state, int function, int option, size_t flags);

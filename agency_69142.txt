@@ -1,5 +1,0 @@
-
-Agency state: 35- Ille-et-Vilaine.
-Agency id: 69142
-Agency address: AYRE-AYMAN-ZABRE
-Agency ID will be used to find it and append data to it as employees etc...

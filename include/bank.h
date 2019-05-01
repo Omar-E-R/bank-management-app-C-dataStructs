@@ -158,6 +158,7 @@ struct individual_t
 	status_type changes;
 
 	status_type status;
+
 	char uuid[UUID_SIZE];
 	char sex;
 	char *lastname;
@@ -176,7 +177,7 @@ struct individual_t
 	account_t *bank_account[4];
 	login_t *login;
 	agency_t *agency;
-
+	employee_t *employee;
 	individual_t* next;
 };
 
@@ -479,7 +480,7 @@ char *bank_state_get(state_t* state, size_t flag);
 agency_t* bank_state_get_empty_agency(state_t* state);
 
 agency_t* bank_state_get_agencies(state_t* state);
-agency_t *bank_state_get_agency_n(state_t *state, int option, size_t num, char *address);
+agency_t *bank_state_get_agency_n(state_t* state, int option, char* arg);
 
 int bank_state_add_agency(state_t *state, agency_t *agency);
 
@@ -487,7 +488,7 @@ bank_t* bank();
 void bank_set_status(bank_t* bank, status_type flag);
 state_t* bank_get_state(bank_t* bank);
 void bank_add_state(bank_t *data, state_t *state);
-state_t *bank_get_state_n(bank_t *bank,int option , size_t num);
+state_t* bank_get_state_n(bank_t* bank, int option, size_t num, char* name);
 
 admin_t* bank_admin();
 
@@ -503,7 +504,7 @@ int bank_admin_set_agency(admin_t* admin, agency_t* agency);
 int bank_admin_set_bank(admin_t* admin, bank_t* bank);
 
 int bank_admin_add(admin_t* admin_list, admin_t* admin);
-
+bank_t* bank_admin_get_bank(admin_t* admin);
 int bank_login_set_status(login_t *login, status_type flag);
 
 login_t *bank_login_authenticate(login_t *list, login_t *login);
@@ -529,7 +530,7 @@ login_t *bank_employee_get_login(employee_t *employee);
 int bank_state_is_status(state_t *state, status_type status);
 char *bank_login_get_id(login_t *login);
 int bank_agency_export_info(agency_t *agency);
-int modify_individual(individual_t *individual, char *email, char *address_no1, char *city, int zipcode, char *address_no2, char *mobile_phone, char *home_phone, char *id_card_no);
+int modify_individual(individual_t *individual, individual_t* new_ind);
 login_t *create_login(agency_t *agency, char *pass);
 individual_t *create_individual(agency_t *agency, login_t *login, char sex, char *lastname, char *firstname, char *birthdate, char *email, char *address_no1, char *city, int zipcode, char *address_no2, char *mobile_phone, char *home_phone, char *id_card_no);
 
@@ -537,4 +538,35 @@ int clear();
 
 individual_t *scan_individual(login_t *login, agency_t *agency);
 login_t *bank_login_add(login_t *list, login_t *login);
+
+
+void bank_print_status(status_type status);
+
+void bank_print_changes(status_type changes);
+
+void bank_print_individual(individual_t* individual);
+
+void bank_print_account(account_t* account);
+
+void bank_print_employee(employee_t* employee);
+
+void bank_print_agency_info(agency_t* agency);
+
+void bank_print_state_info(state_t* state);
+
+state_t* bank_get_next_state(state_t* state, int flag);
+
+
+employee_t *bank_employee_get_next(employee_t *employee);
+
+employee_t *bank_individual_get_employee(individual_t *individual);
+
+agency_t *bank_agency_get_next(agency_t *agency, int flag);
+
+int bank_print_accounts(account_t *account, size_t flag, int count);
+
+int bank_employee_set_postion(employee_t *employee, size_t flag);
+account_t *bank_account_get_n(account_t *account, char *iban);
+int bank_money_transfer(account_t *account_sender, account_t *account_reciever, double transaction_amount, char currency);
+
 #endif

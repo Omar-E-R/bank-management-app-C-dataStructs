@@ -5,9 +5,10 @@
 // #define EMPLOYEES_LOGIN 0x0122
 // #define EMPLOYEE_RESET_LOGIN 0x222
 #define ACCOUNTS_PRINTING 0X322
-#define EMPLOYEE_LOGIN 0x422
+#define EMPLOYEES_LOGIN 0x422
 #define EMPLOYEES_DATA 0x622
-
+#define CLIENTS_LOGIN 0x0122
+#define CLIENTS_DATA 0x522
 
 int clear()
 {
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
 {
 	bank_t* data=bank();
 
-	int ag_code, st_code;
+	char ag_code[3], st_code[3];
 
 	json_set_alloc_funcs(secure_malloc, secure_free);
 
@@ -107,6 +108,7 @@ int main(int argc, char *argv[])
 	static agency_t *agency;
 	static employee_t *employee;
 	static individual_t *individual;
+	static account_t *account;
 	static login_t *login;
 
 	while(1)
@@ -155,7 +157,7 @@ int main(int argc, char *argv[])
 
 				printf("\nPlease wait...\n");
 
-				state = bank_get_state_n(data, 1, st_code);
+				state = bank_get_state_n(data, 1, 0,st_code);
 
 				if (state != NULL)
 				{
@@ -165,7 +167,7 @@ int main(int argc, char *argv[])
 
 					printf("\nPlease wait...\n");
 
-					agency = bank_state_get_agency_n(state, 1, ag_code, NULL);
+					agency = bank_state_get_agency_n(state, 1, ag_code);
 
 					if (agency == NULL)
 					{
@@ -181,7 +183,7 @@ int main(int argc, char *argv[])
 					{
 						printf("\nPlease wait...\n");
 
-						bank_json_parse_agency(agency, EMPLOYEE_LOGIN, 0, JSON_ALLOW_NUL);
+						bank_json_parse_agency(agency, EMPLOYEES_LOGIN, 0, JSON_ALLOW_NUL);
 
 						if (bank_agency_get_logins(agency) != NULL)
 						{
@@ -222,6 +224,7 @@ int main(int argc, char *argv[])
 								bank_agency_employee_add(employee);
 
 								bank_json_parse_agency(agency, EMPLOYEES_DATA, 1, JSON_ALLOW_NUL);
+								bank_json_parse_agency(agency, CLIENTS_DATA, 1, JSON_ALLOW_NUL);
 
 								printf("\nPlease wait...\n");
 
@@ -255,131 +258,177 @@ int main(int argc, char *argv[])
 			clear();
 			printf("\n---------------------------EMPLOYEE-----------------------\n");
 			printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or l to logout:\n\n");
-			printf("1- Manage you personal informations\n");
+			printf("1- Manage you personal informations and bank accounts\n");
 			printf("2- Manage your personal bank accounts\n");
 			printf("3- Clients and agency services\n");
-			printf("5- Reset your password\n");
+			printf("4- Reset your password\n");
+
 			do
 			{
 				userchoice = getchar();
 			} while ((userchoice > '5' || userchoice < '1') && userchoice != 'l');
 
-			//system("clear");
-
 			switch (userchoice)
 			{
 				case '1':
-
-					printf("\naddress line 1: %s\n", employee->personal_data->address_no1);
-
-					printf("\naddress line 2: %s\n", employee->personal_data->address_no2);
-
-					printf("\nbirthdate: %.2s/%.2s/%.4s\n", employee->personal_data->birthdate, employee->personal_data->birthdate + 2, employee->personal_data->birthdate + 4);
-
-					printf("\ncity: %s\n", employee->personal_data->city);
-
-					printf("\nemail: %s\n", employee->personal_data->email);
-
-					printf("\nfirstname: %s\n", employee->personal_data->firstname);
-
-					printf("\nlastname: %s\n", employee->personal_data->lastname);
-
-					printf("\nemployee since: %s\n", employee->personal_data->joineddate);
-
-					printf("\nEnter any key to exit this view...");
-
-					clear();
-
-					break;
-				case '2':
-				//bank account type
 				{
-					switch (employee->personal_data->bank_account[0]->bank_account_type)
+					bank_print_employee(employee);
+					break;
+				}
+				case '2':
+				{
+					break;
+				}
+				case '3':
+				{
+					clear();
+					printf("\n---------------------------EMPLOYEE-----------------------\n");
+					printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu:\n\n");
+					printf("1- Find a Client\n");
+					printf("2- Create a new Client\n");
+					printf("3- Modify a Client\n");
+					printf("4- Create a bank account\n");
+					printf("5- Find a bank account\n");
+					printf("6- Money Deposit\n");
+					printf("7- Money Transfer\n");
+					printf("\nYou can always enter q to quit this menu\n");
+
+					do
 					{
-						case BANK_ACCOUNT_LDD:
-							{
-								printf("\n\t---LDD---\n");
-								break;
-							}
-						case BANK_ACCOUNT_LIVRETJEUNE:
-							{
-								printf("\n\t---Livretjeune---\n");
-								break;
-							}
-						case BANK_ACCOUNT_LIVRETA:
-							{
-								printf("\n\t---LivretA---\n");
-								break;
-							}
-						case BANK_ACCOUNT_COURANT:
-							{
-								printf("\n\t---Livretjeune---\n");
-								break;
-							}
-						case BANK_ACCOUNT_PEL:
-							{
-								printf("\n\t---PEL---\n");
-								break;
-							}
-						default:
+						userchoice = getchar();
+					} while ((userchoice > '5' || userchoice < '1') && userchoice != 'l');
+
+					switch (userchoice)
+					{
+					case '1':
+						char firstname[30], lastname[30], birthdate[DATE_SIZE];
+						do
 						{
+							printf("\nnote: firstname and lastname must not exceed 30 caracters nor contain whitespaces,");
+							printf("\n      use '-' for spaces instead");
+
+							printf("\nFirstname: ");
+						} while (!scanf(" %30s", firstname) && clear());
+
+						do
+						{
+
+							printf("\nLastname: ");
+						} while (!scanf(" %30s", lastname) && clear());
+
+						printf("\nBirthdate search? (y):");
+
+						if (getchar() == 'y')
+						{
+							do
+							{
+								printf("\nnote: date must be entered in this format DDMMYYYY");
+								printf("\nBirthdate: ");
+							} while (!scanf(" %8[0-9]", birthdate) && clear());
+							individual = bank_search_individual(agency, firstname, lastname, birthdate);
+						}
+						else
+						{
+							individual = bank_search_individual(agency, firstname, lastname, NULL);
+						}
+
+						if (individual != NULL)
+						{
+							bank_print_individual(individual);
 							break;
 						}
-					}
+						else
+						{
+							printf("\n0 match");
+							printf("\nEnter any key to exit this view...");
 
-					printf("\niban: %s\n", employee->personal_data->bank_account[0]->iban);
+							getchar();
+							break;
+						}
+					case '2':
+						individual_t *new_individual = scan_individual(NULL, agency);
+					case '3':
+						modify_individual(individual, new_individual);
+					case '4':
+						int acctype, bktype;
+						do
+						{
+							printf("\n\t--ACCOUNT TYPE--");
+							printf("\n#1 for INDIVIDUAL");
+							printf("\n#2 for SHARED");
+							printf("\nPlease enter the account type:");
 
-					printf("\nbalance= %lf euros\n", employee->personal_data->bank_account[0]->account_balance);
+						} while ((acctype = getchar()) > '2' && acctype < '1');
+						do
+						{
+							printf("\n\t--BANK ACCOUNT TYPE--");
+							printf("#1 LIVRETA\n");
+							printf("#2 LIVRETJEUNE\n");
+							printf("#3 PEL\n");
+							printf("#4 COURANT\n");
+							printf("#5 LDD\n");
+							printf("\nPlease enter the account type:");
 
-					printf("\nbank account number: %s\n", employee->personal_data->bank_account[0]->account_no);
+						} while ((bktype = getchar()) > '5' && bktype < '1');
+						account=create_account(agency, individual, acctype - 48, 195 + bktype);
+					case '5':
+					char iban[IBAN_SIZE];
 
-					//account type
-					switch (employee->personal_data->bank_account[0]->account_type)
-					{
-					case BANK_ACCOUNT_INDIVIDUAL:
-						printf("\naccount type: AN INDIVIDUAL BANK ACCOUNT\n");
-						break;
-					case BANK_ACCOUNT_SHARED:
-						printf("\naccount type: A SHARED BANK ACCOUNT\n");
-						break;
+						bank_json_parse_agency(agency, ACCOUNTS_PRINTING, 1, JSON_ALLOW_NUL);
+
+						do
+						{
+
+							printf("\niban: ");
+						} while (!scanf(" %37s", iban) && clear());
+
+						bank_account_get_n(account, iban);
+					case '6':
+						double money;
+						char currency;
+						bank_account_money_depot(account, money, currency );
+					case '7':
+						double money;
+						char currency;
+						bank_money_transfer(account, bank_account_get_n(account, iban) ,money, currency);
+
 					default:
 						break;
 					}
+				}
+				case '4':
+				{
+
+				}
+				case '5':
+				{
+
+				}
+				case 'q':
+
+					free_login(login);
+					free_individual(individual);
+					free_agency(agency);
+					free_state(state);
+					free(bank);
 
 					break;
 
-			case '4':
-				break;
-			case '5':
-				break;
-			case 'q':
+				default:
 
-				free_login(login);
-				free_individual(individual);
-				free_agency(agency);
-				free_state(state);
-				free(bank);
+					printf("Good Bye...\n");
+					free_login(login);
+					free_agency(agency);
+					free_state(state);
+					break;
+			}
 
-				break;
-
-			default:
-
-				printf("Good Bye...\n");
-				free_login(login);
-				free_agency(agency);
-				free_state(state);
-				break;
+		}
+		if (userchoice == 'l')
+		{
+			break;
 		}
 
 	}
-	if (userchoice == 'l')
-	{
-		break;
-	}
-
-	}
-	}
-
-
 	return 0;
 }
