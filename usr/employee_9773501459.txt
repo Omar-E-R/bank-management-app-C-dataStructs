@@ -1,7 +1,0 @@
-
-State: 31 Haute-Garonne
-Agency address: TOULOUSE-CAPITOLE
-Agency ID: 51839
-Employee login ID: 9773501459
-Employee's firstname: ALRIFAI
-Employee's lastname: FATEN

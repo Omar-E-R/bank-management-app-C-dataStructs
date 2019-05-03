@@ -1,7 +1,0 @@
-
-State: 31 Haute-Garonne
-Agency address: TOULOUSE-CAPITOLE
-Agency ID: 51839
-Employee login ID: 3909542879
-Employee's firstname: DUPONT
-Employee's lastname: JEAN

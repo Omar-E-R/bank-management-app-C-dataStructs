@@ -1,7 +1,0 @@
-
-State: 31 Haute-Garonne
-Agency address: TOULOUSE-BAYARD
-Agency ID: 39338
-Employee login ID: 9502710093
-Employee's firstname: ELRIFAI
-Employee's lastname: ELIE
