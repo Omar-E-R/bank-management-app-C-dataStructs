@@ -64,6 +64,7 @@ int bank_json_dump_state(state_t *state, int option, size_t flags);
 int bank_json_dump_bank(bank_t *bank, int option, size_t flags);
 int bank_json_dump_admin(login_t *admin, size_t flag);
 
+int bank_write_activity(account_t *account, char* activity);
 
 void *guaranteed_memset(void *v, int c, size_t n);
 

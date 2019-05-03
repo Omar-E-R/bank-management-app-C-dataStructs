@@ -88,3 +88,55 @@ account type: A SHARED BANK ACCOUNT
 	---ACCOUNT #2---
 
 	---ACCOUNT #3---
+
+	---ACCOUNT #0---
+
+	---LivretA---
+
+iban: FR0740053393380000010363J11
+
+BIC: ELRIFAIO
+
+balance= 0.00 euros
+
+bank account number: 0000010363J
+
+account type: A SHARED BANK ACCOUNT
+
+	---ACCOUNT #1---
+
+	---ACCOUNT #2---
+
+	---ACCOUNT #3---
+
+	---ACCOUNT #0---
+
+	---LivretA---
+
+iban: FR0740053393380000010363J11
+
+BIC: ELRIFAIO
+
+balance= 0.00 euros
+
+bank account number: 0000010363J
+
+account type: A SHARED BANK ACCOUNT
+
+	---ACCOUNT #1---
+
+	---Livretjeune---
+
+iban: FR0740053393380000010639L74
+
+BIC: ELRIFAIO
+
+balance= 0.00 euros
+
+bank account number: 0000010639L
+
+account type: AN INDIVIDUAL BANK ACCOUNT
+
+	---ACCOUNT #2---
+
+	---ACCOUNT #3---

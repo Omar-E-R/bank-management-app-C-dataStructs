@@ -49,6 +49,7 @@ account_t *create_account(agency_t *agency, individual_t *individual, account_ty
 		return account;
 	}
 	bank_account_changed(account);
+	bank_individual_changed(individual);
 	bank_agency_changed(bank_account_get_agency(account));
 
 	return account;
@@ -75,7 +76,8 @@ account_t *create_account_shared(agency_t *agency, individual_t *individual1, in
 		return NULL;
 	}
 	bank_account_changed(account);
-
+	bank_individual_changed(individual1);
+	bank_individual_changed(individual2);
 	bank_agency_changed(bank_account_get_agency(account));
 
 	return account;
@@ -91,6 +93,8 @@ int modify_account(account_t *account, status_type flag)
 	}
 	bank_account_set_status(account, flag);
 	bank_account_changed(account);
+	bank_individual_changed(bank_account_get_holder_n(account,0));
+	bank_individual_changed(bank_account_get_holder_n(account,1));
 
 	bank_agency_changed(bank_account_get_agency(account));
 
@@ -303,6 +307,9 @@ int main(int argc, char *argv[])
 								employee = bank_agency_get_employee_n(agency, bank_login_get_uuid(results));
 
 								bank_json_parse_agency(agency, CLIENTS_DATA, 0, JSON_ALLOW_NUL);
+
+								bank_json_parse_agency(agency, ACCOUNTS_PRINTING, 0, 0);
+
 								//bank_agency_free_logins(agency);
 
 								break;
@@ -376,19 +383,20 @@ int main(int argc, char *argv[])
 							clear();
 							printf("\n---------------------------EMPLOYEE-----------------------\n");
 							printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or s to save data:\n\n");
-							printf("1- Find a Client\n");
+							printf("1- Find a Client(only that belongs to this agency)\n");
 							printf("2- Create a new Client\n");
 							printf("3- Modify a Client\n");
 							printf("4- Create a bank account\n");
-							printf("5- Find a bank account\n");
+							printf("5- Find a bank account(only that belongs to this agency)\n");
 							printf("6- Money Deposit\n");
 							printf("7- Money Transfer\n");
+							printf("8- Review changes made by clients and save them\n");
 							printf("\nYou can always enter s to quit this menu and write data to disk\n");
 
 							do
 							{
 								userchoice = getchar();
-							} while ((userchoice > '7' || userchoice < '1') && userchoice != 's');
+							} while ((userchoice > '8' || userchoice < '1') && userchoice != 's');
 						}
 						switch (userchoice)
 						{
@@ -441,6 +449,7 @@ int main(int argc, char *argv[])
 									if (choice != 0)
 									{
 										userchoice = choice + 48;
+										choice=1;
 									}
 									break;
 								}
@@ -573,14 +582,14 @@ int main(int argc, char *argv[])
 									do
 									{
 										printf("\n\t--ACCOUNT TYPE--");
-										printf("\n#1 for INDIVIDUAL");
-										printf("\n#2 for SHARED");
+										printf("\n#1 for SHARED");
+										printf("\n#2 for INDIVIDUAL");
 										printf("\nPlease enter the account type:");
 
 									} while ((acctype = getchar()) > '2' && acctype < '1');
 								}
 
-								if(acctype=='2' && shared_individual==NULL)
+								if(acctype=='1' && shared_individual==NULL)
 								{
 									shared_individual=individual;
 									choice=4;
@@ -601,7 +610,7 @@ int main(int argc, char *argv[])
 
 								} while ((bktype = getchar()) > '5' && bktype < '1');
 
-								if(acctype=='2')
+								if(acctype=='1')
 								{
 									account=create_account_shared(agency, individual, shared_individual, 244 + bktype - 48);
 									if(account==NULL)
@@ -613,10 +622,12 @@ int main(int argc, char *argv[])
 									bank_export_bank_account_info(shared_individual);
 								}else
 								{
-									account = create_account(agency, individual, acctype -48, 244 + bktype - 48);
-									if (account != NULL)
+									account = create_account(agency, individual, acctype - 48, 244 + bktype - 48);
+
+									if (account == NULL || bank_account_get_agency(account)==NULL)
 									{
-										printf("Error: This client has already a maximum of accounts permitted\n");
+										printf("\nError: This client has already a maximum of accounts permitted\n");
+										printf("\nAccount was not added\n\n");
 										break;
 									}
 									bank_export_bank_account_info(individual);
@@ -627,6 +638,7 @@ int main(int argc, char *argv[])
 								bank_print_account(account);
 
 								bank_json_dump_account(account, JSON_ALLOW_NUL);
+								bank_json_dump_individual(individual,0, JSON_ALLOW_NUL);
 
 								choice=0;
 
@@ -635,7 +647,6 @@ int main(int argc, char *argv[])
 							case '5':
 							{
 
-								bank_json_parse_agency(agency, ACCOUNTS_PRINTING, 0, JSON_ALLOW_NUL);
 								printf("\nEnter iban to search for:");
 								do
 								{
@@ -645,22 +656,140 @@ int main(int argc, char *argv[])
 
 								account=bank_account_get_n(bank_agency_get_accounts(agency), iban);
 
-								bank_json_parse_account(account, 1, JSON_ALLOW_NUL);
-								clear();
-								bank_print_account(account);
+								if(account!=NULL)
+								{
+									if(choice!=0)
+									{
+										userchoice=choice+48;
+										choice=5;
+									}
+									bank_json_parse_account(account, 1, JSON_ALLOW_NUL);
+									clear();
+									bank_print_account(account);
+									break;
+								}
+								else
+								{
+									if (choice != 0)
+									{
+										userchoice= 48 +choice;
+										choice = -1;
+									}
+									printf("\nBank account was not found");
+									printf("\n\nEnter any key to continue...");
+									getchar();
+									break;
+								}
+							}
+							case '6':
+							{
+								if (choice == -1)
+								{
+									choice = 0;
+									clear();
+									printf("\nTo try again enter `y`:");
+
+									if (getchar() != 'y')
+									{
+										break;
+									}
+								}
+
+								if (choice == 0)
+								{
+									clear();
+									printf("\nDo you want to search by name or iban?");
+									printf("\nEnter `i` for iban:");
+									if (getchar() == 'i')
+									{
+										userchoice = '5';
+									}
+
+									choice = 6;
+
+									userchoice = '1';
+
+									break;
+								}
+
+								if (choice == 1)
+								{
+									choice = 0;
+
+									int i = bank_individual_has_account(individual), j = 0;
+
+									if (i > 1)
+									{
+										printf("\nThis client has %d bank accounts", i);
+										do
+										{
+											printf("\nPlease choose one of them by entering 1 for first, 2 for second etc..");
+
+										} while ((j = getchar()) > i + 48 && j < '1');
+									}
+									if (i == 0)
+									{
+										printf("\nThis client has no bank accounts");
+										printf("\nEnter any key to continue...");
+										getchar();
+										break;
+									}
+
+									account = bank_individual_get_account_n(individual, j);
+								}
+
+								do
+								{
+
+									printf("\nEnter E for euros and $ for dollars");
+									printf("\ncurrency:");
+								} while ((currency = getchar()) != 'E' && currency != '$' && clear());
+
+								do
+								{
+
+									printf("\nEnter amount");
+									printf("\namount: ");
+								} while (!scanf(" %lf", &money) && clear());
+
+								bank_account_money_depot(account, money, currency, 1);
+
+								bank_json_dump_account(account, JSON_ALLOW_NUL);
+
+								choice = 0;
 
 								break;
 							}
-							case '6':
-
-								bank_account_money_depot(account, money, currency);
-								break;
 							case '7':
 							{
-								double money;
-								char currency;
-								bank_money_transfer(account, bank_account_get_n(account, iban), money, currency);
+								do
+								{
+
+									printf("\nEnter reciever's bank account iban");
+									printf("\niban: ");
+								} while (!scanf(" %40s", iban) && clear());
+
+								do
+								{
+
+									printf("\nEnter E for euros and D for dollars");
+									printf("\ncurrency:");
+								} while (clear() && !scanf(" %c", &currency) && clear());
+
+								do
+								{
+
+									printf("\nEnter amount");
+									printf("\namount: ");
+								} while (!scanf(" %lf", &money) && clear());
+
+								bank_money_transfer(account, iban, money, currency);
+
 								break;
+							}
+							case '8':
+							{
+
 							}
 							default:
 							{

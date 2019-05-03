@@ -7,6 +7,12 @@
                 "login_client": [
                                 {
                                                 "status": 1,
+                                                "uuid": "36f3d544-7ed1-4a0e-99df-7c89deac8bde",
+                                                "login_id": "6100373156",
+                                                "login_key": "$6$Ln9n.vtxycJGrpVc$pUX.v0Bpe1v/gCHgnZYzgriSGwQc7.4UP28Jvouux0n9Qoq8TWE9N4k/iUT.hB680ZtxcsSvI7Tuy7YFMDiGY1"
+                                },
+                                {
+                                                "status": 1,
                                                 "uuid": "aafdfe47-7022-4fd6-b136-ff70fdbb844f",
                                                 "login_id": "2933177047",
                                                 "login_key": "$6$L2Fn1caAV7DV5Ptu$ol8zLJkPU1D.ozOcGh/2ZblWTe2wCfgoT4e0gA5G/2sOj1HJy64umaf08Sxz1qcTCVSh2YlTkIEGYTjooFx8E1"
@@ -21,9 +27,33 @@
                 "accounts": [
                                 {
                                                 "status": 1,
-                                                "uuid": "2b64921a-3abd-4b89-b3cd-95567a990f3d",
+                                                "uuid": "fc72344e-a332-4306-affe-4d82ce3099b8",
+                                                "bank_account_type": 247,
+                                                "iban": "FR0740053393380000010644G96"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "4c7290f6-f89b-472f-a8c3-4d3b63557901",
+                                                "bank_account_type": 246,
+                                                "iban": "FR0740053393380000010639L74"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "8a19bb35-0ff1-4a9f-a727-246c8c50ee33",
                                                 "bank_account_type": 245,
-                                                "iban": "FR0740053393380000010519Z84"
+                                                "iban": "FR0740053393380000010878M64"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "253d8092-2134-4661-a62e-cc2dfc7166f2",
+                                                "bank_account_type": 245,
+                                                "iban": "FR0740053393380000010057W10"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "bbefdc7a-59c5-44ad-9eea-7890568e8327",
+                                                "bank_account_type": 245,
+                                                "iban": "FR0740053393380000010665P48"
                                 }
                 ],
                 "login_employee": [
@@ -41,6 +71,13 @@
                                 }
                 ],
                 "individuals": [
+                                {
+                                                "status": 1,
+                                                "uuid": "36f3d544-7ed1-4a0e-99df-7c89deac8bde",
+                                                "lastname": "THOMAS",
+                                                "firstname": "CADEAU",
+                                                "birthdate": "12122012"
+                                },
                                 {
                                                 "status": 1,
                                                 "uuid": "aafdfe47-7022-4fd6-b136-ff70fdbb844f",

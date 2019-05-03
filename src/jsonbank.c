@@ -7,26 +7,6 @@
 #define TMPDIR "./tmp/"
 #define FILENAME_MAX_ 360
 
-/* EMPLOYEE
-#define MULTI_ACCESS
-#define EMPLOYEE_ACCESS
-#define LOGIN
-#define EMPLOYEE_LOGIN
-
-*/
-
-/*ADMIN
-#define MULTI_ACCESS
-#define ADMIN_ACCESS
-#define EMPLOYEE_ACCESS
-*/
-
-
-/*CLIENT
-#define CLIENT_LOGIN
-#define LOGIN
-*/
-
 
 
 #ifdef CLIENT_LOGIN
@@ -502,7 +482,7 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 		json_array_foreach(account_array, index, value)
 		{
-			res = json_unpack_ex(value, &error, JSON_ALLOW_NUL, "{s:i, s:s, s:i, s:s}", "status", &status, "uuid", &uuid, "bank_account_type", &bank_account_type, "iban", &iban);
+			res = json_unpack_ex(value, &error, 0, "{s:i, s:s, s:i, s:s}", "status", &status, "uuid", &uuid, "bank_account_type", &bank_account_type, "iban", &iban);
 
 			if (res == -1)
 			{
@@ -1598,12 +1578,93 @@ int bank_json_dump_admin(login_t* admin, size_t flag)
 
 
 
-
-
-/*
-int bank_json_dump_account_activity(char* activity_uuid, size_t flags)
+int bank_write_activity(account_t *account, char* activity)
 {
+	char *path = calloc(strlen(account->agency->state->uuid_state) + strlen(account->agency->uuid_agency) + strlen(account->uuid_activity) + 20 + 1, sizeof(char));
 
+	strcpy(path, DATABASE_DIR);
+
+	strcat(path, account->agency->state->uuid_state);
+
+	strcat(path, "/");
+
+	strcat(path, account->agency->uuid_agency);
+
+	strcat(path, "/");
+
+	strcat(path, "activity");
+
+	strcat(path, "/");
+
+	path_finder(path);
+
+	strcat(path, account->uuid_activity);
+
+	strcat(path, ".csv");
+
+	FILE* fp=fopen(path, "r");
+
+	if (!fp)
+	{
+		FILE *fp = fopen(path, "w");
+
+		if(!fp)
+		{
+			perror("Activity file");
+			printf("failed to open activity file\n");
+			fprintf(stderr, "failed to open activity file\n");
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			fputs("Date de l'operation;Libelle;Detail de l'ecriture;Montant de l'operation;Devise", fp);
+		}
+
+
+	}
+	else
+	{
+		fp=fopen(path, "a");
+	}
+
+
+	fprintf(fp, "%s\n", activity);
+
+	free(path);
+
+	fclose(fp);
+
+	account->changes=BANK_OBJECT_CHANGED;
+
+	return EXIT_SUCCESS;
+}
+/*
+int bank_dump_account_activity(account_t *account, size_t flags)
+{
+	char *path = calloc(strlen(account->agency->state->uuid_state) + strlen(account->agency->uuid_agency) + 12 + 1, sizeof(char));
+
+	strcpy(path, account->agency->state->uuid_state);
+
+	strcat(path, "/");
+
+	strcat(path, account->agency->uuid_agency);
+
+	strcat(path, "/");
+
+	strcat(path, "accounts");
+
+	strcat(path, "/");
+
+	FILE* fp=fopen(path, "a");
+
+	if (!fp)
+	{
+		perror("Text file creation");
+		printf("\nfailed to save it into a text file");
+		return EXIT_FAILURE;
+	}
+
+	free(path);
 	json_t* root=json_load_data_file(activity_uuid, flags);
 
 	json_error_t error;
@@ -1644,5 +1705,49 @@ int bank_json_dump_account_activity(char* activity_uuid, size_t flags)
 
 	return path;
 }
+
+char *parse_operations_csv(json_t *operations_object)
+{
+	json_error_t error;
+	char *uuid_operations;
+	int res = json_unpack_ex(operations_object, &error, 0, "{s:s%}", "uuid_operations", &uuid_operations);
+	if (res)
+	{
+		json_decref(operations_object);
+		fail("json_unpack object operations: Wrong type, format or incompatible JSON value encountered");
+		fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
+		return NULL;
+	}
+	char *path = malloc((strlen(uuid_operations) + strlen(WORKSPACE) + strlen(DATABASE) + 1 + 4) * sizeof(char));
+	strcpy(path, WORKSPACE);
+	strcat(path, DATABASE);
+	strcat(path, uuid_operations);
+	strcat(path, ".csv");
+
+	FILE *fp = fopen(path, "w");
+	json_t *op_array = json_object_get(operations_object, "operations");
+	json_t *value;
+
+	size_t index;
+	char *date_operation, *libelle, *detail, *montant, *devise;
+
+	fputs("Date de l'operation;Libelle;Detail de l'ecriture;Montant de l'operation;Devise", fp);
+
+	json_array_foreach(op_array, index, value)
+	{
+		if (json_unpack(value, "{s:s, s:s, s:s, s:s, s:s !}", "date_operation", &date_operation, "libelle", &libelle, "detail", &detail, "montant", &montant, "devise", &devise))
+		{
+			json_decref(operations_object);
+			fail("json_unpack object operations: Wrong type, format or incompatible JSON value encountered");
+			return NULL;
+		}
+
+		fprintf(fp, "%s;%s;%s;%s;%s\n", date_operation, libelle, detail, montant, devise);
+		json_decref(value);
+	}
+
+	fclose(fp);
+
+	return path;
 }
 */

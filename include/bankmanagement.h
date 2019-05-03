@@ -181,8 +181,7 @@ char *bank_account_get(account_t *account, size_t flag);
 	this bank_account */
 int bank_account_set_iban(account_t *account);
 
-int bank_account_money_depot(account_t *account, double money_amount, char currency);
-
+int bank_account_money_depot(account_t *account, double money_amount, char currency, int flag);
 individual_t *bank_individual(size_t flag);
 
 /*returns the status of an individual
@@ -412,7 +411,6 @@ int bank_employee_set_postion(employee_t *employee, size_t flag);
 
 account_t *bank_account_get_n(account_t *account, char *iban);
 
-int bank_money_transfer(account_t *account_sender, account_t *account_reciever, double transaction_amount, char currency);
 
 int bank_individual_set_employee(individual_t *individual, employee_t *employee);
 int bank_individual_compare(individual_t *ind1, individual_t *ind2);
@@ -424,6 +422,9 @@ char *bank_login_get_uuid(login_t *login);
 int bank_account_changed(account_t *account);
 individual_t *scan_modify_individual();
 individual_t *bank_employee_get_individual(employee_t *employee);
+int bank_money_transfer(account_t *account_sender, char *iban_reciever, double transaction_amount, char currency);
+account_t *bank_individual_get_account_n(individual_t *individual, int num);
+individual_t *bank_account_get_holder_n(account_t *account, int num);
 #endif
 
 #ifndef JSONBANK_H
@@ -445,6 +446,7 @@ individual_t *bank_employee_get_individual(employee_t *employee);
 	int bank_json_dump_state(state_t *state, int option, size_t flags);
 	int bank_json_dump_bank(bank_t *bank, int option, size_t flags);
 	int bank_json_dump_admin(login_t *admin, size_t flag);
+	int bank_write_activity(account_t *account, char *activity);
 
 	void *guaranteed_memset(void *v, int c, size_t n);
 

@@ -1,5 +1,6 @@
 #include "bank.h"
 
+#define ACCOUNTS_PRINTING 0X322
 
 /* returns 0 if bank_account status is size_t flag,
 	1 if it is not, and
@@ -413,6 +414,15 @@ individual_t* bank_account_get_holder(account_t *account)
 	}
 	return account->account_holder[0];
 }
+individual_t* bank_account_get_holder_n(account_t *account, int num)
+{
+	if (account == NULL || account->account_holder == NULL)
+	{
+		fprintf(stderr, "error bank_account_get_holder_n\n");
+		return NULL;
+	}
+	return account->account_holder[num];
+}
 
 
 account_t* bank_account_get_n(account_t* account, char* iban)
@@ -451,7 +461,7 @@ char* bank_account_get(account_t *account, size_t flag)
 		}
 		case BANK_ACCOUNT_BALANCE:
 		{
-			sprintf(res, "%lf",  account->account_balance);
+			sprintf(res, "%.2lf",  account->account_balance);
 			return res;
 		}
 		case BANK_ACCOUNT_NO:
@@ -496,31 +506,59 @@ int bank_account_set_iban(account_t *account)
 	}
 }
 
-int bank_account_money_depot(account_t *account, double money_amount, char currency)
+int bank_account_money_depot(account_t *account, double money_amount, char currency, int flag)
 {
 	if (account == NULL || account->status != BANK_OBJECT_INIT || money_amount == 0)
 	{
 		fprintf(stderr, "error bank_account_money_depot\n");
 		return EXIT_FAILURE;
 	}
+	account->changes=BANK_OBJECT_CHANGED;
+	if(flag!=0)
+	{
+
+		char activity[ACCOUNT_ACTIVITY_SIZE], amount[20];
+
+		sprintf(amount, "%.2lf", money_amount);
+		amount[10] = '\0';
+		time_t timeoftheday;
+
+		time(&timeoftheday);
+
+		strncpy(activity, ctime(&timeoftheday), 24);
+		strcat(activity, LIBELLE_D);
+		strcat(activity, "depot espece en agence no:");
+		strcat(activity, account->agency->agency_id);
+		strcat(activity, ";");
+		strcat(activity, amount);
+		strcat(activity, ";");
+
+		if (currency == 'E')
+		{
+			strcat(activity, "euros");
+		}
+		else
+		{
+			strcat(activity, "dollars");
+		}
+
+		bank_write_activity(account, activity);
+	}
 
 	switch (currency)
 	{
-	case 'E':
-	{
-		account->account_balance += money_amount;
-		return EXIT_SUCCESS;
-	}
 	case '$':
 	{
 		account->account_balance += (money_amount * DOLLAR_TO_EURO);
 		return EXIT_SUCCESS;
 	}
 	default:
-		return EXIT_FAILURE;
+		account->account_balance += money_amount;
+		return EXIT_SUCCESS;
 	}
 	return EXIT_FAILURE;
 }
+
 int bank_account_changed(account_t* account)
 {
 	if(account==NULL)
@@ -805,9 +843,20 @@ int bank_individual_set_joindate(individual_t *individual, char* date)
 
 int bank_individual_has_account(individual_t *individual)
 {
-	if (individual->bank_account[0] != NULL && (individual->flag == BANK_ACCOUNT_SHARED || individual->flag == BANK_ACCOUNT_INDIVIDUAL))
-		return EXIT_SUCCESS;
-	return EXIT_FAILURE;
+	if(individual==NULL)
+	{
+		return 0;
+	}
+
+	int i, count=0;
+	for (i = 0; i < 4; i++)
+	{
+		if (individual->bank_account[i] != NULL)
+		{
+			count++;
+		}
+	}
+	return count;
 }
 
 
@@ -1105,6 +1154,17 @@ account_t* bank_individual_get_account(individual_t *individual, bank_account_ty
 				return individual->bank_account[i];
 			}
 		}
+	}
+	fprintf(stderr, "error bank_individual_get_account\n");
+	return NULL;
+}
+
+account_t* bank_individual_get_account_n(individual_t *individual, int num)
+{
+	if(individual!=NULL)
+	{
+
+		return individual->bank_account[num];
 	}
 	fprintf(stderr, "error bank_individual_get_account\n");
 	return NULL;
@@ -2981,7 +3041,7 @@ int bank_export_bank_account_info(individual_t* individual)
 
 			fprintf(fp,"\nBIC: %s\n", CODE_BIC);
 
-			fprintf(fp,"\nbalance= %lf euros\n", account[i]->account_balance);
+			fprintf(fp,"\nbalance= %.2lf euros\n", account[i]->account_balance);
 
 			fprintf(fp,"\nbank account number: %s\n", account[i]->account_no);
 
@@ -3281,9 +3341,9 @@ individual_t *scan_modify_individual()
 		printf("\nId Card number: ");
 	} while (!scanf(" %24s", id_card_no) && clear());
 
-	indiv=create_individual(NULL, NULL, "", "", "", "", email, address_no1, city, zipcode, address_no2, mobile_phone, home_phone, id_card_no);
+	indiv=create_individual(NULL, NULL, '\0', "", "", "", email, address_no1, city, zipcode, address_no2, mobile_phone, home_phone, id_card_no);
 
-
+	indiv->changes=BANK_OBJECT_CHANGED;
 	return indiv;
 }
 
@@ -3321,6 +3381,7 @@ void bank_print_status(status_type status)
 				printf("INITIALIAZED\n");
 				break;
 			}
+
 		default:
 			printf("ERROR\n");
 			break;
@@ -3379,7 +3440,7 @@ void bank_print_individual(individual_t* individual)
 		bank_print_status(individual->status);
 
 		printf("\nmodifications: ");
-		bank_print_status(individual->changes);
+		bank_print_changes(individual->changes);
 #endif
 
 #ifdef ADMIN_ACCESS
@@ -3447,7 +3508,7 @@ int bank_print_accounts(account_t* account, size_t flag, int count)
 
 			printf("\nBIC: %s\n", CODE_BIC);
 
-			printf("\nbalance= %lf euros\n", account->account_balance);
+			printf("\nbalance= %.2lf euros\n", account->account_balance);
 
 			printf("\nbank account number: %s\n", account->account_no);
 
@@ -3480,7 +3541,7 @@ int bank_print_accounts(account_t* account, size_t flag, int count)
 			bank_print_status(account->status);
 
 			printf("\nmodifications: ");
-			bank_print_status(account->changes);
+			bank_print_changes(account->changes);
 	#endif
 
 	#ifdef ADMIN_ACCESS
@@ -3528,7 +3589,7 @@ void bank_print_account(account_t* account)
 
 		printf("\nBIC: %s\n", CODE_BIC);
 
-		printf("\nbalance= %lf euros\n", account->account_balance);
+		printf("\nbalance= %.2lf euros\n", account->account_balance);
 
 		printf("\nbank account number: %s\n", account->account_no);
 
@@ -3552,7 +3613,7 @@ void bank_print_account(account_t* account)
 		bank_print_status(account->status);
 
 		printf("\nmodifications: ");
-		bank_print_status(account->changes);
+		bank_print_changes(account->changes);
 #endif
 
 #ifdef ADMIN_ACCESS
@@ -3637,7 +3698,159 @@ void bank_print_state_info(state_t* state)
 		printf("\nERROR");
 }
 
-int bank_money_transfer(account_t* account_sender, account_t* account_reciever, double transaction_amount, char currency)
+int bank_money_transfer(account_t* account_sender, char* iban_reciever, double transaction_amount, char currency)
 {
-	return EXIT_SUCCESS;
+
+	bank_t* var=bank();
+
+	state_t* var_st=var->state;
+
+	agency_t* var_ag=NULL;
+
+	account_t* var_acc=NULL;
+
+	bank_json_parse_bank(var, 1, 0);
+
+	int done=1;
+
+	while (done && var_st != NULL && (var_st = bank_get_next_state(var_st, 1)) != NULL)
+	{
+		var_ag = var_st->agencies;
+
+		while (done && var_ag != NULL && (var_ag = bank_agency_get_next(var_ag, 1)) != NULL)
+		{
+
+			bank_json_parse_agency(var_ag, ACCOUNTS_PRINTING, 0, 0);
+
+			if (var_ag->bank_accounts != NULL)
+			{
+				var_acc=bank_account_get_n(var_ag->bank_accounts, iban_reciever);
+
+				if(var_acc!=NULL)
+				{
+					done=0;
+					break;
+				}
+			}
+			var_ag = var_ag->next;
+		}
+		var_st = var_st->next;
+	}
+
+	if(var_acc!=NULL)
+	{
+		clear();
+
+		printf("\nBank Account reciever:");
+
+		bank_print_individual(var_acc->account_holder[0]);
+		if (var_acc->account_holder[1]!=NULL)
+			bank_print_individual(var_acc->account_holder[1]);
+
+		bank_print_account(var_acc);
+
+		clear();
+		printf("\nTransfer amount:%.2lf", transaction_amount);
+		printf("\nTo validate transfer enter `y`:");
+
+		if(getchar()!='y')
+		{
+			return EXIT_FAILURE;
+		}
+
+		char activity[ACCOUNT_ACTIVITY_SIZE], amount[20];
+
+		//Date de l'operation;Libelle;Detail de l'ecriture;Montant de l'operation;Devise
+
+		sprintf(amount, "%.2lf", transaction_amount);
+
+		amount[19]='\0';
+
+		time_t timeoftheday;
+
+		time(&timeoftheday);
+
+		strncpy(activity, ctime(&timeoftheday), 24);
+
+		strcat(activity, LIBELLE_T);
+
+		strcat(activity, LIBELLE_R);
+
+		strcat(activity, var_acc->account_holder[0]->firstname);
+
+		strcat(activity, " ");
+
+		strcat(activity, var_acc->account_holder[0]->lastname);
+
+		strcat(activity, " iban:");
+
+		strcat(activity, var_acc->iban);
+
+		strcat(activity, " -Sender");
+
+		strcat(activity, account_sender->account_holder[0]->firstname);
+
+		strcat(activity, " ");
+
+		strcat(activity, account_sender->account_holder[0]->lastname);
+
+		strcat(activity, " iban:");
+
+		strcat(activity, account_sender->iban);
+
+		size_t size1=strlen(activity);
+
+		strcat(activity, ";-");
+
+		strcat(activity, amount);
+
+		strcat(activity, ";");
+
+		if(currency=='E')
+		{
+			strcat(activity, "euros");
+
+		}else
+		{
+			strcat(activity, "dollars");
+		}
+
+		bank_write_activity(account_sender, activity);
+
+		strcpy(activity+size1, ";");
+
+		strcat(activity, amount);
+
+		strcat(activity, ";");
+
+		if (currency == 'E')
+		{
+			strcat(activity, "euros");
+		}
+		else
+		{
+			strcat(activity, "dollars");
+		}
+
+		bank_write_activity(var_acc, activity);
+
+		bank_account_money_depot(var_acc,transaction_amount, currency,0);
+
+		bank_account_money_depot(account_sender,1 - transaction_amount, currency,0);
+
+		bank_json_dump_account(var_acc, JSON_ALLOW_NUL);
+
+		bank_json_dump_account(account_sender, JSON_ALLOW_NUL);
+
+		free(var);
+
+		return EXIT_SUCCESS;
+	}
+	else
+	{
+		free(var);
+		printf("\nSorry Bank account of the reciever were not found");
+		return EXIT_FAILURE;
+	}
+
 }

@@ -1,0 +1,50 @@
+
+State: 31 Haute-Garonne
+
+Agency address: TOULOUSE-BAYARD
+
+Agency ID: 39338
+
+Client login ID: 6100373156
+
+Client's firstname: CADEAU
+
+Client's lastname: THOMAS
+
+birthdate: 12/12/2012
+
+email: W
+
+zipcode: 2
+
+address line 1: W
+
+address line 2: W
+
+mobile phone: 2
+
+home phone: 2
+
+city: W
+
+ID card number: 2
+
+	---ACCOUNT #0---
+
+	---LDD---
+
+iban: FR0740053393380000010644G96
+
+BIC: ELRIFAIO
+
+balance= 0.00 euros
+
+bank account number: 0000010644G
+
+account type: AN INDIVIDUAL BANK ACCOUNT
+
+	---ACCOUNT #1---
+
+	---ACCOUNT #2---
+
+	---ACCOUNT #3---
