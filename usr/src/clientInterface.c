@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "bankmanagement.h"
 
 #define CLIENTS_LOGIN 0x0122
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
 
 		if (getchar() == 'q')
 		{
-			free(data);
+			//free(data);
 			return 0;
 		}
 
@@ -60,11 +61,15 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				ag_code = atoi(decoded) / 100;
-				st_code = atoi(decoded) % 100;
+				strncpy(ag_code, decoded, 2);
+
+				strncpy(st_code, decoded + 2, 2);
+
+				ag_code[2] = '\0';
+				st_code[2] = '\0';
 
 				printf("\nPlease wait...\n");
-				state = bank_get_state_n(data, 1, st_code);
+				state = bank_get_state_n(data, 1,0, st_code);
 
 				if (state != NULL)
 				{
@@ -74,7 +79,7 @@ int main(int argc, char *argv[])
 
 					printf("\nPlease wait...\n");
 
-					agency = bank_state_get_agency_n(state, 1, ag_code, NULL);
+					agency = bank_state_get_agency_n(state, 1, ag_code);
 
 					if (agency == NULL)
 					{
@@ -82,7 +87,7 @@ int main(int argc, char *argv[])
 						printf("\nWRONG user ID or password\n");
 						printf("Please try again!\n");
 
-						free_state(state);
+						//free_state(state);
 					}
 					else
 					{
@@ -108,10 +113,10 @@ int main(int argc, char *argv[])
 								printf("\nWRONG user ID or password\n");
 								printf("Please try again!\n");
 
-								free_login(login);
-								free_agency(agency);
-								free_state(state);
-								free(decoded);
+								//free_login(login);
+								//free_agency(agency);
+								//free_state(state);
+								//free(decoded);
 							}
 							else
 							{
@@ -128,7 +133,7 @@ int main(int argc, char *argv[])
 
 								printf("\nPlease wait...\n");
 
-								bank_agency_free_logins(agency);
+								//bank_agency_free_logins(agency);
 
 								bank_individual_set_status(individual, BANK_OBJECT_INIT);
 
@@ -146,7 +151,7 @@ int main(int argc, char *argv[])
 					//system("clear");
 					printf("\nWRONG user ID or password\n");
 					printf("Please try again!\n");
-					free(decoded);
+					//free(decoded);
 				}
 			}
 		}
@@ -186,21 +191,21 @@ int main(int argc, char *argv[])
 				break;
 			case 'q':
 
-				free_login(login);
-				free_individual(individual);
-				free_agency(agency);
-				free_state(state);
-				free(bank);
+				//free_login(login);
+				//free_individual(individual);
+				//free_agency(agency);
+				//free_state(state);
+				//free(bank);
 
 				break;
 
 			default:
 
 				printf("Good Bye...\n");
-				free_login(login);
+				//free_login(login);
 
-				free_agency(agency);
-				free_state(state);
+				//free_agency(agency);
+				//free_state(state);
 				break;
 			}
 			if (userchoice == 'l')

@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <string.h>
+#include <time.h>
+#include <sys/time.h>
 #include"jsonbank.h"
 #include"random.h"
 #include"login.h"
@@ -568,5 +570,14 @@ int bank_print_accounts(account_t *account, size_t flag, int count);
 int bank_employee_set_postion(employee_t *employee, size_t flag);
 account_t *bank_account_get_n(account_t *account, char *iban);
 int bank_money_transfer(account_t *account_sender, account_t *account_reciever, double transaction_amount, char currency);
-
+int bank_individual_set_employee(individual_t *individual, employee_t *employee);
+int bank_individual_compare(individual_t *ind1, individual_t *ind2);
+int bank_agency_remove_individual(agency_t *agency, individual_t *individual);
+int bank_export_client_info(individual_t *individual);
+int bank_export_bank_account_info(individual_t *individual);
+employee_t *bank_agency_get_employee_n(agency_t *agency, char *uuid);
+char *bank_login_get_uuid(login_t *login);
+int bank_account_changed(account_t *account);
+individual_t *scan_modify_individual();
+individual_t *bank_employee_get_individual(employee_t *employee);
 #endif

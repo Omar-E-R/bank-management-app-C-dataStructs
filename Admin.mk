@@ -3,6 +3,11 @@ HDRDIR := include
 OBJDIR := bin
 LIBDIR := lib
 
+MAINSRC := usr/src/adminInterface.c
+
+EXE := adminInterface.exe
+
+PREPROCHDR := -DADMIN_ACCESS
 
 SOURCES :=$(wildcard $(SRCDIR)/*.c)
 
@@ -10,32 +15,31 @@ OBJECTS := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 INCLUDES := $(wildcard $(HDRDIR)/*.h)
 
-TARGET := libbankmanagement.so
+TARGET := libbankmanagementad.so
 
-CC := gcc
+CC := gcc -Wall
 
-CFLAGS := -Wall -ggdb -ljansson -lcrypt -luuid
+CFLAGS := -ggdb -ljansson -lcrypt -luuid
 
 LFLAGS :=-I$(HDRDIR) -fPIC
 
 
 
-admin: $(LIBDIR)/$(TARGET)
-	gcc -Wall ./usr/src/adminInterface.c -o ./adminInterface -I./include -L./lib -lbankmanagement -ljansson
-	./adminInterface
+admin:$(LIBDIR)/$(TARGET)
+	$(CC) $(MAINSRC) -o $(EXE) -I$(HDRDIR) -L./$(LIBDIR) -lbankmanagementad -ljansson
+	./$(EXE)
 
 $(LIBDIR)/$(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(LFLAGS) -shared $^ -o $@
 
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@ -DADMIN_ACCESS
+	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@  $(PREPROCHDR)
 
 
 
 .PHONY: clean
 
 clean:
-	rm ./bin/*
-	rm ./adminInterface
+	rm $(EXE)
 	clear

@@ -1,0 +1,91 @@
+{
+                "status": 1,
+                "uuid": "13743ccd-e27b-4a8c-91e9-5a2b999db894",
+                "agency_id": "39338",
+                "agency_address": "TOULOUSE-BAYARD",
+                "agency_code": "31",
+                "login_client": [
+                                {
+                                                "status": 1,
+                                                "uuid": "aafdfe47-7022-4fd6-b136-ff70fdbb844f",
+                                                "login_id": "2933177047",
+                                                "login_key": "$6$L2Fn1caAV7DV5Ptu$ol8zLJkPU1D.ozOcGh/2ZblWTe2wCfgoT4e0gA5G/2sOj1HJy64umaf08Sxz1qcTCVSh2YlTkIEGYTjooFx8E1"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "ab92eac1-72f4-41c1-99ac-faddea094376",
+                                                "login_id": "7477003391",
+                                                "login_key": "$6$0KwNbCLGl5OYtuSa$N9IP5tXElFq1QaXEb6AQUjSjVD/8QD8Tvc.a8BDQjbxEG3HxfvgaqBKxuQ1WG.kGzCEUfOgDHi.jgCkVApcSR1"
+                                }
+                ],
+                "accounts": [
+                                {
+                                                "status": 1,
+                                                "uuid": "2b64921a-3abd-4b89-b3cd-95567a990f3d",
+                                                "bank_account_type": 245,
+                                                "iban": "FR0740053393380000010519Z84"
+                                }
+                ],
+                "login_employee": [
+                                {
+                                                "status": 1,
+                                                "uuid": "3b139df1-a70d-4d6e-b827-46bd60c65c69",
+                                                "login_id": "9502710093",
+                                                "login_key": "$6$eXlqXMYA2W3E8W5o$KPLQ0jZTCVmjYzpLzAIjGj/2DezKYQRFqqHtY06z5VPac1WQh3NCYFARuh.HI2em8vzC3W2Sai0NQhp/38msD."
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "eb859115-f0c3-4f5b-a478-f72904ae0b4c",
+                                                "login_id": "6073513517",
+                                                "login_key": "$6$aexB3hb/IcxnKhQ6$HNdcwzSddjsGdfZhZL/1Nha0Ax7el0kQY2d2nM183lk7ry5Pvtwou7oBs09n1tVOc9yIH0XqZ3vAl4F38aOZs/"
+                                }
+                ],
+                "individuals": [
+                                {
+                                                "status": 1,
+                                                "uuid": "aafdfe47-7022-4fd6-b136-ff70fdbb844f",
+                                                "lastname": "OMAR",
+                                                "firstname": "ELRIFAI",
+                                                "birthdate": "22061996"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "ab92eac1-72f4-41c1-99ac-faddea094376",
+                                                "lastname": "THOMAS",
+                                                "firstname": "DUPONT",
+                                                "birthdate": "12122012"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "3b139df1-a70d-4d6e-b827-46bd60c65c69",
+                                                "lastname": "ELIE",
+                                                "firstname": "ELRIFAI",
+                                                "birthdate": "01091965"
+                                },
+                                {
+                                                "status": 1,
+                                                "uuid": "eb859115-f0c3-4f5b-a478-f72904ae0b4c",
+                                                "lastname": "OMAR",
+                                                "firstname": "ELRIFAI",
+                                                "birthdate": "22061996"
+                                }
+                ],
+                "employees": [
+                                {
+                                                "status": 1,
+                                                "position": 2,
+                                                "uuid": "3b139df1-a70d-4d6e-b827-46bd60c65c69",
+                                                "lastname": "ELIE",
+                                                "firstname": "ELRIFAI",
+                                                "birthdate": "01091965"
+                                },
+                                {
+                                                "status": 1,
+                                                "position": 1,
+                                                "uuid": "eb859115-f0c3-4f5b-a478-f72904ae0b4c",
+                                                "lastname": "OMAR",
+                                                "firstname": "ELRIFAI",
+                                                "birthdate": "22061996"
+                                }
+                ]
+}

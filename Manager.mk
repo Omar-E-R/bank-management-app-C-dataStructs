@@ -3,6 +3,11 @@ HDRDIR := include
 OBJDIR := bin
 LIBDIR := lib
 
+MAINSRC := usr/src/managerInterface.c
+
+EXE := managerInterface.exe
+
+PREPROCHDR := -DEMPLOYEE_ACCESS -DMULTI_ACCESS -DEMPLOYEE_LOGIN
 
 SOURCES :=$(wildcard $(SRCDIR)/*.c)
 
@@ -10,28 +15,28 @@ OBJECTS := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 INCLUDES := $(wildcard $(HDRDIR)/*.h)
 
-TARGET := libbankmanagement.so
+TARGET := libbankmanagementma.so
 
-CC := gcc
+CC := gcc -Wall
 
-CFLAGS := -Wall -ggdb -ljansson -lcrypt -luuid
+CFLAGS := -ggdb -ljansson -lcrypt -luuid
 
 LFLAGS :=-I$(HDRDIR) -fPIC
 
 manager: $(LIBDIR)/$(TARGET)
-	gcc -Wall ./usr/src/managerInterface.c -o ./managerInterface -I./include -L./lib -lbankmanagement -ljansson
+	$(CC) $(MAINSRC) -o $(EXE) -I$(HDRDIR) -L./$(LIBDIR) -lbankmanagementma -ljansson
+	./$(EXE)
 
 $(LIBDIR)/$(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(LFLAGS) -shared $^ -o $@
 
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@ -DEMPLOYEE_ACCESS -DMULTI_ACCESS -DEMPLOYEE_LOGIN
+	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@ $(PREPROCHDR)
 
 
 .PHONY: clean
 
 clean:
-	rm ./bin/*
-	rm ./managerInterface
+	rm $(EXE)
 	clear

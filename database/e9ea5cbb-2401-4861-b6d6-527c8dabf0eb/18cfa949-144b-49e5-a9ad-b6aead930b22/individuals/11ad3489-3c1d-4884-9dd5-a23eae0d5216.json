@@ -1,0 +1,19 @@
+{
+                "status": 1,
+                "uuid": "11ad3489-3c1d-4884-9dd5-a23eae0d5216",
+                "sex": 77,
+                "lastname": "JEAN",
+                "firstname": "DUPONT",
+                "birthdate": "01011999",
+                "email": "Q",
+                "address_no1": "Q",
+                "city": "Q",
+                "zipcode": 2,
+                "address_no2": "Q",
+                "mobilephone": "2",
+                "homephone": "2",
+                "id_card_no": "2",
+                "joineddate": "Thu May  2 23:05:35 2019\n",
+                "flag": 2,
+                "accounts": []
+}

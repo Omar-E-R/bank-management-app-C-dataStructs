@@ -1,0 +1,90 @@
+
+State: 31 Haute-Garonne
+
+Agency address: TOULOUSE-BAYARD
+
+Agency ID: 39338
+
+Client login ID: 7477003391
+
+Client's firstname: DUPONT
+
+Client's lastname: THOMAS
+
+birthdate: 12/12/2012
+
+email: W
+
+zipcode: 1
+
+address line 1: W
+
+address line 2: W
+
+mobile phone: 1
+
+home phone: 1
+
+city: W
+
+ID card number: 1
+
+	---ACCOUNT #0---
+
+	---Livretjeune---
+
+iban: FR0740053393380000010328F16
+
+BIC: ELRIFAIO
+
+balance= 0.000000 euros
+
+bank account number: 0000010328F
+
+account type: A SHARED BANK ACCOUNT
+
+	---ACCOUNT #1---
+
+	---ACCOUNT #2---
+
+	---ACCOUNT #3---
+
+	---ACCOUNT #0---
+
+	---LivretA---
+
+iban: FR0740053393380000010519Z84
+
+BIC: ELRIFAIO
+
+balance= 0.000000 euros
+
+bank account number: 0000010519Z
+
+account type: A SHARED BANK ACCOUNT
+
+	---ACCOUNT #1---
+
+	---ACCOUNT #2---
+
+	---ACCOUNT #3---
+
+	---ACCOUNT #0---
+
+	---LivretA---
+
+iban: FR0740053393380000010519Z84
+
+BIC: ELRIFAIO
+
+balance= 0.000000 euros
+
+bank account number: 0000010519Z
+
+account type: A SHARED BANK ACCOUNT
+
+	---ACCOUNT #1---
+
+	---ACCOUNT #2---
+
+	---ACCOUNT #3---

@@ -3,6 +3,11 @@ HDRDIR := include
 OBJDIR := bin
 LIBDIR := lib
 
+MAINSRC := usr/src/clientInterface.c
+
+EXE := clientInterface.exe
+
+PREPROCHDR := -DCLIENT_LOGIN
 
 SOURCES :=$(wildcard $(SRCDIR)/*.c)
 
@@ -10,29 +15,29 @@ OBJECTS := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 INCLUDES := $(wildcard $(HDRDIR)/*.h)
 
-TARGET := libbankmanagement.so
+TARGET := libbankmanagementcl.so
 
-CC := gcc
+CC := gcc -Wall
 
-CFLAGS := -Wall -ggdb -ljansson -lcrypt -luuid
+CFLAGS := -ggdb -ljansson -lcrypt -luuid
 
 LFLAGS :=-I$(HDRDIR) -fPIC
 
 
 client: $(LIBDIR)/$(TARGET)
-	gcc -Wall ./usr/src/clientInterface.c -o ./clientInterface -I./include -L./lib -lbankmanagement -ljansson
+	$(CC) $(MAINSRC) -o $(EXE) -I$(HDRDIR) -L./$(LIBDIR) -lbankmanagementcl -ljansson
+	./$(EXE)
 
 $(LIBDIR)/$(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(LFLAGS) -shared $^ -o $@
 
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@ -DCLIENT_LOGIN
+	$(CC) $(CFLAGS) $(LFLAGS) -c  $< -o $@ $(PREPROCHDR)
 
 
 .PHONY: clean
 
 clean:
-	rm ./bin/*
-	rm ./clientInterface
+	rm $(EXE)
 	clear

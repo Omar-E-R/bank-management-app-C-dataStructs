@@ -26,7 +26,6 @@
 
 
 char *french_states[99] = {"Ain", "Aisne", "Allier", "Alpes-de-Haute-Provence", "Hautes-Alpes", "Alpes-Maritimes", "Ardèche", "Ardennes", "Ariège", "Aube", "Aude", "Aveyron", "Bouches-du-Rhône", "Calvados", "Cantal", "Charente", "Charente-Maritime", "Cher", "Corrèze", "Côte-d'or", "Côtes-d'armor", "Creuse", "Dordogne", "Doubs", "Drôme", "Eure", "Eure-et-Loir", "Finistère", "Corse-du-Sud", "Gard", "Haute-Garonne", "Gers", "Gironde", "Hérault", "Ille-et-Vilaine", "Indre", "Indre-et-Loire", "Isère", "Jura", "Landes", "Loir-et-Cher", "Loire", "Haute-Loire", "Loire-Atlantique", "Loiret", "Lot", "Lot-et-Garonne", "Lozère", "Maine-et-Loire", "Manche", "Marne", "Haute-Marne", "Mayenne", "Meurthe-et-Moselle", "Meuse", "Morbihan", "Moselle", "Nièvre", "Nord", "Oise", "Orne", "Pas-de-Calais", "Puy-de-Dôme", "Pyrénées-Atlantiques", "Hautes-Pyrénées", "Pyrénées-Orientales", "Bas-Rhin", "Haut-Rhin", "Rhône", "Haute-Saône", "Saône-et-Loire", "Sarthe", "Savoie", "Haute-Savoie", "Paris", "Seine-Maritime", "Seine-et-Marne", "Yvelines", "Deux-Sèvres", "Somme", "Tarn", "Tarn-et-Garonne", "Var", "Vaucluse", "Vendée", "Vienne", "Haute-Vienne", "Vosges", "Yonne", "Territoire de Belfort", "Essonne", "Hauts-de-Seine", "Seine-Saint-Denis", "Val-de-Marne", "Val-d'oise", "Guadeloupe", "Martinique", "Guyane", "La Réunion"};
-// "Mayotte", "Polynésie Française", "Nouvelle Calédonie"};
 
 int create_empty_agencies(state_t *state)
 {
@@ -190,7 +189,7 @@ employee_t *create_employee(individual_t *individual, employee_position position
 	// bank_employee_set_uuid(employee);
 
 	bank_employee_set_individual(employee, individual);
-
+	bank_individual_set_employee(individual, employee);
 	bank_employee_set_agency(employee, bank_individual_get_agency(individual));
 
 	if (bank_agency_employee_add(employee))
@@ -215,21 +214,21 @@ employee_t *create_employee(individual_t *individual, employee_position position
 	 then parses agency json and searches
 	 for login credentials and verify them,
 	on success it parses individual_t json and return it*/
-individual_t *login_client(bank_t *bank, login_t *login)
-{
-}
-employee_t *login_employee(bank_t *bank, login_t *login)
-{
-}
-admin_t *login_admin(bank_t *bank, login_t *login)
-{
-}
-int individual_forgot_password(login_t *login, char *id_card_no, char *iban, char *email)
-{
-}
-int individual_forgot_id(login_t *login, char *id_card_no, char *iban, char *email)
-{
-}
+// individual_t *login_client(bank_t *bank, login_t *login)
+// {
+// }
+// employee_t *login_employee(bank_t *bank, login_t *login)
+// {
+// }
+// admin_t *login_admin(bank_t *bank, login_t *login)
+// {
+// }
+// int individual_forgot_password(login_t *login, char *id_card_no, char *iban, char *email)
+// {
+// }
+// int individual_forgot_id(login_t *login, char *id_card_no, char *iban, char *email)
+// {
+// }
 
 
 
@@ -327,7 +326,11 @@ int main(int argc, char *argv[])
 
 			bank_login_set_id(login, id);
 
-			memset(&(pass[0]), 0, strlen(pass));
+			if(userchoice!='6')
+			{
+				memset(&(pass[0]), 0, strlen(pass));
+			}
+
 			memset(&(id[0]), 0, strlen(id));
 
 
@@ -350,6 +353,7 @@ int main(int argc, char *argv[])
 				if (userchoice == '6' && results != NULL)
 				{
 					char new_pass[11];
+					char retype_new_pass[11];
 
 					while(1)
 					{
@@ -358,33 +362,41 @@ int main(int argc, char *argv[])
 
 							printf("\nEnter new password:");
 
-						} while (!scanf(" %10s", pass) && clear());
+						} while (clear() && !scanf(" %10s", new_pass) && clear());
 
 						do
 						{
 
 							printf("\nRetype password:");
 
-						} while (!scanf(" %10s", new_pass) && clear());
+						} while (clear() && !scanf(" %10s", retype_new_pass) && clear());
 
-						if (strcmp(pass, new_pass) != 0)
+						if (strcmp(retype_new_pass, new_pass) != 0)
 						{
 							printf("\nError: Password mismatch");
 						}else
 						{
-							printf("\nPassword changed");
-							break;
+							if (strcmp(pass, new_pass) == 0)
+							{
+								printf("\nWarning Password must be different from old one");
+								printf("\nPlease try again...\n");
+							}
+							else
+							{
+								printf("\nPassword changed");
+								break;
+							}
 						}
-
 					}
 
-					bank_login_set_key(results, pass);
+					bank_login_set_key(results, new_pass);
 
 					encrypt_login_pass(results);
 
 					bank_json_dump_admin(admin_logs, 0);
 
 					memset(&(pass[0]), 0, strlen(pass));
+					memset(&(retype_new_pass[0]), 0, strlen(retype_new_pass));
 					memset(&(new_pass[0]), 0, strlen(new_pass));
 				}
 				else
@@ -680,7 +692,7 @@ int main(int argc, char *argv[])
 
 					bank_json_parse_agency(agency, EMPLOYEES_DATA, 1, JSON_ALLOW_NUL);
 
-					bank_json_parse_agency(agency, CLIENTS_DATA, 0, JSON_ALLOW_NUL);
+					//bank_json_parse_agency(agency, CLIENTS_DATA, 0, JSON_ALLOW_NUL);
 
 					if (agency == NULL || bank_agency_is_status(agency, BANK_OBJECT_INIT))
 					{
@@ -693,6 +705,21 @@ int main(int argc, char *argv[])
 						getchar();
 
 						break;
+					}
+					else
+					{
+						clear();
+
+						printf("\nThis agency was found:\n");
+
+						bank_print_agency_info(agency);
+
+						printf("\nTo validate agency enter `y`:");
+
+						if(getchar()!='y')
+						{
+							break;
+						}
 					}
 
 					char retype[11];
@@ -767,7 +794,7 @@ int main(int argc, char *argv[])
 						else
 						{
 							printf("\n\nEnter any key to continue...");
-
+							getchar();
 							break;
 						}
 
@@ -1337,12 +1364,16 @@ int main(int argc, char *argv[])
 
 							if(account!=NULL)
 							{
-								count=bank_print_accounts(account, 195 + userchoice, count);
+								count=bank_print_accounts(account, 244 -48 + userchoice, count);
 							}
 							agency = bank_agency_get_next(agency, 0);
 						}
 						state = bank_get_next_state(state, 0);
 					}
+					clear();
+					printf("\nEnter any key to continue...");
+
+					getchar();
 
 					if(count==1)
 					{

@@ -191,6 +191,12 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 		return EXIT_FAILURE;
 	}
 
+	if (individual ->address_no1!=NULL)
+	{
+		fail("bank_json_parse_individual(1) ALREADY PARSED, PARSING IGNORED");
+		return EXIT_FAILURE;
+	}
+
 	char *path = calloc(strlen(individual->agency->state->uuid_state) + strlen(individual->agency->uuid_agency) + strlen(individual->uuid) + 15 + 1, sizeof(char));
 
 	strcpy(path, individual->agency->state->uuid_state);
@@ -312,6 +318,7 @@ int bank_json_parse_account(account_t *account, int option, size_t flags)
 		return EXIT_FAILURE;
 	}
 
+
 	char *path = calloc(strlen(account->agency->state->uuid_state) + strlen(account->agency->uuid_agency) + strlen(account->uuid_account) + 15 + 1, sizeof(char));
 
 	strcpy(path, account->agency->state->uuid_state);
@@ -373,7 +380,7 @@ int bank_json_parse_account(account_t *account, int option, size_t flags)
 			json_unpack(value,"{s:s}", "uuid_individual", &uuid);
 
 			account->account_holder[index]=bank_individual(account_type);
-
+			account->account_holder[index]->status=BANK_OBJECT_INIT;
 			strcpy(account->account_holder[index]->uuid, uuid);
 
 			bank_json_parse_individual(account->account_holder[index],0 ,0);
@@ -475,9 +482,8 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 
 	/* AGENCY-> LOGINS*/
-	if(function==CLIENTS_LOGIN)
+	if(function == CLIENTS_LOGIN)
 	{
-
 		json_t *login_client_array = json_object_get(root, "login_client");
 
 		agency->logins=bank_json_parse_login(login_client_array);
@@ -525,7 +531,7 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 			if(option==1)
 			{
-				bank_json_parse_account(iter_account, 1, JSON_ALLOW_NUL);
+				bank_json_parse_account(iter_account, 0, JSON_ALLOW_NUL);
 			}
 		}
 		json_decref(root);
@@ -649,7 +655,6 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 	if(function==EMPLOYEES_DATA)
 	{
 
-
 		json_t *employee_array = json_object_get(root, "employees");
 
 		int position;
@@ -668,18 +673,16 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				return EXIT_FAILURE;
 			}
 
-#ifndef EMPLOYEE_LOGIN
+
 			iter_employee = bank_employee(position);
+			iter_indiv = bank_individual(BANK_ACCOUNT_EMPTY);
+			iter_employee->personal_data = iter_indiv;
 
 			iter_employee->status = status;
 
 			iter_employee->position = position;
 
 			iter_employee->agency = agency;
-
-			iter_indiv = bank_individual(BANK_ACCOUNT_EMPTY);
-
-			iter_employee->personal_data=iter_indiv;
 
 			iter_indiv->status = BANK_OBJECT_EMPTY;
 
@@ -689,9 +692,9 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 			bank_individual_set_birthdate(iter_indiv, birthdate);
 
-			strcpy(iter_indiv->uuid, uuid);
-
 			iter_indiv->agency = agency;
+
+			strcpy(iter_indiv->uuid, uuid);
 
 			iter_login = agency->logins;
 
@@ -701,11 +704,8 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				{
 					iter_indiv->login = iter_login;
 
-					free(iter_login->uuid);
-
 					break;
 				}
-
 				iter_login = iter_login->next;
 			}
 
@@ -715,47 +715,32 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				json_decref(root);
 				return EXIT_FAILURE;
 			}
-			if (bank_agency_employee_add(iter_employee) || bank_agency_individual_add(iter_indiv))
+
+#ifndef EMPLOYEE_LOGIN
+			if (bank_agency_individual_add(iter_indiv))
 			{
 				fail("error bank_json_parse_agency(8): MANAGERS INTERFACE");
 				json_decref(root);
 				return EXIT_FAILURE;
-
 			}
-#else
-			if(strcmp(uuid, agency->employees->personal_data->uuid)==0)
+#endif
+			if (bank_agency_employee_add(iter_employee))
 			{
-				iter_indiv=agency->employees->personal_data;
-
-				iter_employee=agency->employees;
-
-				iter_employee->status = status;
-
-				iter_employee->position = position;
-
-				iter_indiv->status = BANK_OBJECT_EMPTY;
-
-				iter_indiv->agency = agency;
-
-				bank_individual_set_lastname(iter_indiv, lastname);
-
-				bank_individual_set_firstname(iter_indiv, firstname);
-
-				bank_individual_set_birthdate(iter_indiv, birthdate);
-#endif
-				iter_indiv->employee=iter_employee;
-
-				if (option == 1)
-				{
-					iter_indiv->status = BANK_OBJECT_INIT;
-
-					bank_json_parse_individual(iter_indiv, 1, 0);
-				}
-#ifdef EMPLOYEE_LOGIN
+				fail("error bank_json_parse_agency(9): MANAGERS INTERFACE");
+				json_decref(root);
+				return EXIT_FAILURE;
 			}
-#endif
-		}
 
+			iter_indiv->employee = iter_employee;
+
+			if (option == 1)
+			{
+				iter_indiv->status = BANK_OBJECT_INIT;
+
+				bank_json_parse_individual(iter_indiv, 1, 0);
+			}
+			iter_indiv->status = status;
+		}
 	}
 #endif
 
@@ -1234,6 +1219,7 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 	}
 
 	json_t *root;
+
 	json_error_t error;
 
 	if (agency->status!=BANK_OBJECT_INIT || agency->agency_address == NULL)
@@ -1257,8 +1243,8 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 		return EXIT_FAILURE;
 	}
 
-
 	json_t *employee_array, *individual_array, *accounts_array, *login_array_emp, *login_array;
+
 	json_t *employee, *individual, *account, *login;
 
 
@@ -1272,10 +1258,10 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 		login_array=json_array();
 		login_array_emp=json_array();
 
+
 		while(iter_ind!=NULL)
 		{
 			//login
-
 			login = json_pack_ex(&error, 0, "{s:i, s:s, s:s, s:s}", "status", iter_ind->status, "uuid", iter_ind->uuid, "login_id", iter_ind->login->login_id, "login_key", iter_ind->login->login_key);
 
 			if (!login)
@@ -1285,21 +1271,14 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 				json_decref(root);
 				return EXIT_FAILURE;
 			}
-			int status;
-			if (iter_ind->login->status != BANK_LOGIN_EMP)
-			{
-				json_array_append_new(login_array, login);
-				status=iter_ind->status;
-			}
-			else
-			{
-				json_array_append_new(login_array_emp, login);
-				status=BANK_LOGIN_EMP;
-			}
-
+#ifdef ADMIN_ACCESS
+			json_array_append_new(login_array_emp, login);
+#else
+			json_array_append_new(login_array, login);
+#endif
 			//individual
 
-			individual=json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s, s:s}", "status", status, "uuid", iter_ind->uuid, "lastname", iter_ind->lastname, "firstname", iter_ind->firstname, "birthdate", iter_ind->birthdate);
+			individual = json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s, s:s}", "status", iter_ind->status, "uuid", iter_ind->uuid, "lastname", iter_ind->lastname, "firstname", iter_ind->firstname, "birthdate", iter_ind->birthdate);
 
 			if(!individual)
 			{
@@ -1320,11 +1299,11 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 
 		}
 
-		json_object_set_new_nocheck(root, "login_client", login_array);
-
+#ifdef ADMIN_ACCESS
 		json_object_set_new_nocheck(root, "login_employee", login_array_emp);
-
-		json_object_set_new_nocheck(root, "individuals", individual_array);
+#else
+		json_object_set_new_nocheck(root, "login_client", login_array);
+#endif
 
 
 		//accounts
@@ -1358,13 +1337,46 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 		json_object_set_new_nocheck(root, "accounts", accounts_array);
 
 		//employees
-
 		employee_t* iter_emp=agency->employees;
 
 		employee_array=json_array();
 
 		while(iter_emp!=NULL)
 		{
+
+#ifndef ADMIN_ACCESS
+			iter_ind=iter_emp->personal_data;
+			//login
+			login = json_pack_ex(&error, 0, "{s:i, s:s, s:s, s:s}", "status", iter_ind->status, "uuid", iter_ind->uuid, "login_id", iter_ind->login->login_id, "login_key", iter_ind->login->login_key);
+
+			if (!login)
+			{
+				fail("error bank_json_dump_agency(4)");
+				fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
+				json_decref(root);
+				return EXIT_FAILURE;
+			}
+
+			json_array_append_new(login_array_emp, login);
+
+			individual = json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s, s:s}", "status", iter_ind->status, "uuid", iter_ind->uuid, "lastname", iter_ind->lastname, "firstname", iter_ind->firstname, "birthdate", iter_ind->birthdate);
+
+			if (!individual)
+			{
+				fail("error bank_json_dump_agency(3)");
+				fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
+				json_decref(root);
+				return EXIT_FAILURE;
+			}
+
+			json_array_append_new(individual_array, individual);
+
+			if (option == 1 && iter_ind->changes == BANK_OBJECT_CHANGED)
+			{
+				bank_json_dump_individual(iter_ind, 0, flags);
+			}
+
+#endif
 			employee=json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:i, s:s, s:s, s:s, s:s }", "status", iter_emp->status, "position", iter_emp->position, "uuid",iter_emp->personal_data->uuid, "lastname", iter_emp->personal_data->lastname, "firstname", iter_emp->personal_data->firstname, "birthdate", iter_emp->personal_data->birthdate);
 
 			if(!employee)
@@ -1378,6 +1390,11 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 
 			iter_emp=iter_emp->next;
 		}
+
+#ifndef ADMIN_ACCESS
+		json_object_set_new_nocheck(root, "login_employee", login_array_emp);
+#endif
+		json_object_set_new_nocheck(root, "individuals", individual_array);
 
 		json_object_set_new_nocheck(root, "employees", employee_array);
 
@@ -1393,6 +1410,7 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 
 		free(path);
 
+		agency->changes=BANK_OBJECT_CONSTANT;
 		return EXIT_SUCCESS;
 	}
 	default:

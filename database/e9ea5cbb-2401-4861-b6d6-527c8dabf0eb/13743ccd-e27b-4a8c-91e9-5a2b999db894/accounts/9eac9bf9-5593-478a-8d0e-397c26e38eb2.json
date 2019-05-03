@@ -1,0 +1,18 @@
+{
+                "status": 1,
+                "uuid": "9eac9bf9-5593-478a-8d0e-397c26e38eb2",
+                "uuid_activity": "65302694-9535-4732-baa5-fcd190aa322d",
+                "iban": "FR0740053393380000010328F16",
+                "account_no": "0000010328F",
+                "balance": 0.0,
+                "bank_account_type": 249,
+                "account_type": 1,
+                "holders": [
+                                {
+                                                "uuid_individual": "aafdfe47-7022-4fd6-b136-ff70fdbb844f"
+                                },
+                                {
+                                                "uuid_individual": "ab92eac1-72f4-41c1-99ac-faddea094376"
+                                }
+                ]
+}

@@ -1,0 +1,50 @@
+
+State: 31 Haute-Garonne
+
+Agency address: TOULOUSE-CAPITOLE
+
+Agency ID: 51839
+
+Client login ID: 9146760239
+
+Client's firstname: DUPONT
+
+Client's lastname: THOMAS
+
+birthdate: 12/12/2012
+
+email: W
+
+zipcode: 2
+
+address line 1: W
+
+address line 2: W
+
+mobile phone: 2
+
+home phone: 2
+
+city: W
+
+ID card number: 2
+
+	---ACCOUNT #0---
+
+	---Livretjeune---
+
+iban: FR0740053518390000011484S77
+
+BIC: ELRIFAIO
+
+balance= 0.000000 euros
+
+bank account number: 0000011484S
+
+account type: A SHARED BANK ACCOUNT
+
+	---ACCOUNT #1---
+
+	---ACCOUNT #2---
+
+	---ACCOUNT #3---

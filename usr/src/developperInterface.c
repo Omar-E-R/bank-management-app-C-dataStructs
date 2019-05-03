@@ -198,6 +198,8 @@ int main(int argc, char* argv[])
 						printf("\n Please try again:");
 					}
 
+					printf("\nAdmin ID: ", bank_login_get_id(login));
+
 					clear();
 
 					printf("\nTo save this info into a text file please enter:(s)");

@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <sys/time.h>
 #include "bankmanagement.h"
 
 // #define EMPLOYEES_LOGIN 0x0122
@@ -10,13 +13,7 @@
 #define CLIENTS_LOGIN 0x0122
 #define CLIENTS_DATA 0x522
 
-int clear()
-{
-	while ( getchar() != '\n');
-
-	return 1;
-}
-
+char *french_states[99] = {"Ain", "Aisne", "Allier", "Alpes-de-Haute-Provence", "Hautes-Alpes", "Alpes-Maritimes", "Ardèche", "Ardennes", "Ariège", "Aube", "Aude", "Aveyron", "Bouches-du-Rhône", "Calvados", "Cantal", "Charente", "Charente-Maritime", "Cher", "Corrèze", "Côte-d'or", "Côtes-d'armor", "Creuse", "Dordogne", "Doubs", "Drôme", "Eure", "Eure-et-Loir", "Finistère", "Corse-du-Sud", "Gard", "Haute-Garonne", "Gers", "Gironde", "Hérault", "Ille-et-Vilaine", "Indre", "Indre-et-Loire", "Isère", "Jura", "Landes", "Loir-et-Cher", "Loire", "Haute-Loire", "Loire-Atlantique", "Loiret", "Lot", "Lot-et-Garonne", "Lozère", "Maine-et-Loire", "Manche", "Marne", "Haute-Marne", "Mayenne", "Meurthe-et-Moselle", "Meuse", "Morbihan", "Moselle", "Nièvre", "Nord", "Oise", "Orne", "Pas-de-Calais", "Puy-de-Dôme", "Pyrénées-Atlantiques", "Hautes-Pyrénées", "Pyrénées-Orientales", "Bas-Rhin", "Haut-Rhin", "Rhône", "Haute-Saône", "Saône-et-Loire", "Sarthe", "Savoie", "Haute-Savoie", "Paris", "Seine-Maritime", "Seine-et-Marne", "Yvelines", "Deux-Sèvres", "Somme", "Tarn", "Tarn-et-Garonne", "Var", "Vaucluse", "Vendée", "Vienne", "Haute-Vienne", "Vosges", "Yonne", "Territoire de Belfort", "Essonne", "Hauts-de-Seine", "Seine-Saint-Denis", "Val-de-Marne", "Val-d'oise", "Guadeloupe", "Martinique", "Guyane", "La Réunion"};
 
 account_t *create_account(agency_t *agency, individual_t *individual, account_type account_type, bank_account_type bank_account_type)
 {
@@ -42,7 +39,7 @@ account_t *create_account(agency_t *agency, individual_t *individual, account_ty
 	if (res)
 	{
 		fprintf(stderr, "error create_account\n");
-
+		//free(account);
 		return NULL;
 	}
 	if (bank_agency_account_add(account))
@@ -51,6 +48,9 @@ account_t *create_account(agency_t *agency, individual_t *individual, account_ty
 
 		return account;
 	}
+	bank_account_changed(account);
+	bank_agency_changed(bank_account_get_agency(account));
+
 	return account;
 }
 
@@ -71,8 +71,12 @@ account_t *create_account_shared(agency_t *agency, individual_t *individual1, in
 	if (res)
 	{
 		fprintf(stderr, "error create_shared_account");
+		//free(account);
 		return NULL;
 	}
+	bank_account_changed(account);
+
+	bank_agency_changed(bank_account_get_agency(account));
 
 	return account;
 }
@@ -86,6 +90,9 @@ int modify_account(account_t *account, status_type flag)
 		return EXIT_FAILURE;
 	}
 	bank_account_set_status(account, flag);
+	bank_account_changed(account);
+
+	bank_agency_changed(bank_account_get_agency(account));
 
 	return EXIT_SUCCESS;
 }
@@ -93,15 +100,25 @@ int modify_account(account_t *account, status_type flag)
 
 int main(int argc, char *argv[])
 {
-	bank_t* data=bank();
+	struct timeval time; //accurate time to the microseconds
+
+	gettimeofday(&time, NULL);
+
+	// microsecond has 1 000 000
+	// Assuming we do not need quite that accuracy
+	// Also we do not assume the system clock has that accuracy.
+
+	srand((time.tv_sec * 1000) + (time.tv_usec / 1000));
 
 	char ag_code[3], st_code[3];
 
-	json_set_alloc_funcs(secure_malloc, secure_free);
 
-	bank_json_parse_bank(data, 0, 0);
+	int choice = 0;
 
+	unsigned int userchoice = 0;
 
+	static individual_t *new_individual;
+	static individual_t *shared_individual;
 	char id[11], pass[11], *decoded;
 
 	static state_t *state;
@@ -110,16 +127,40 @@ int main(int argc, char *argv[])
 	static individual_t *individual;
 	static account_t *account;
 	static login_t *login;
+	static login_t *results;
+
+	json_set_alloc_funcs(secure_malloc, secure_free);
+
+	static bank_t* data;
+
+
+	int acctype, bktype;
+
+	char firstname[30], lastname[30], birthdate[DATE_SIZE];
+
+	char iban[IBAN_SIZE];
+
+	double money;
+
+	char currency;
+
+	data=bank();
+
+	bank_json_parse_bank(data, 0, 0);
+
+	if (data == NULL || bank_get_state(data)==NULL)
+	{
+		fprintf(stderr, "\n\nERROR: NO DATA WERE FOUND, aborting...\n\n");
+		abort();
+	}
 
 	while(1)
 	{
-
-
 		printf("\n Enter q to quit or any other key to continue...");
 
 		if (getchar() == 'q')
 		{
-			free(data);
+
 			return 0;
 		}
 
@@ -128,61 +169,52 @@ int main(int argc, char *argv[])
 
 			do
 			{
-				//system("clear");
-				printf("--------------------------------------------------\n");
+				printf("----------------------------------------------------------\n");
 				printf("--------------------EMPLOYEES LOGIN PAGE------------------\n");
 				printf("\nEnter user ID:");
 
-			} while (!scanf("%s", id) && clear());
+			} while (!scanf(" %10[0-9]", id) && clear());
 
 			do
 			{
 
 				printf("\nEnter password:");
 
-			} while (!scanf("%s", pass) && clear());
+			} while (!scanf(" %10s", pass) && clear());
 
 			decoded = login_id_decoder(id);
 
 			if (decoded == NULL)
 			{
-				//system("clear");
 				printf("\nWRONG user ID or password\n");
 				printf("Please try again!\n");
 			}
 			else
 			{
-				ag_code = atoi(decoded) / 100;
-				st_code = atoi(decoded) % 100;
+				strncpy(ag_code, decoded, 2);
 
-				printf("\nPlease wait...\n");
+				strncpy(st_code, decoded + 2, 2);
 
-				state = bank_get_state_n(data, 1, 0,st_code);
+				ag_code[2]='\0';
+				st_code[2]='\0';
+
+				state = bank_get_state_n(data, 1, 0, st_code);
 
 				if (state != NULL)
 				{
-					printf("\nPlease wait...\n");
 
 					bank_json_parse_state(state, 0, 0, JSON_ALLOW_NUL);
-
-					printf("\nPlease wait...\n");
 
 					agency = bank_state_get_agency_n(state, 1, ag_code);
 
 					if (agency == NULL)
 					{
-						//system("clear");
-
 						printf("\nWRONG user ID or password\n");
 
 						printf("Please try again!\n");
-
-						free_state(state);
 					}
 					else
 					{
-						printf("\nPlease wait...\n");
-
 						bank_json_parse_agency(agency, EMPLOYEES_LOGIN, 0, JSON_ALLOW_NUL);
 
 						if (bank_agency_get_logins(agency) != NULL)
@@ -193,240 +225,493 @@ int main(int argc, char *argv[])
 
 							bank_login_set_id(login, id);
 
-							login_t *results;
-
-							printf("\nPlease wait...\n");
-
 							if (!(results = bank_login_authenticate(bank_agency_get_logins(agency), login)))
 							{
-								//system("clear");
 								printf("\nWRONG user ID or password\n");
+
 								printf("Please try again!\n");
 
-								free_login(login);
-								free_agency(agency);
-								free_state(state);
-								free(decoded);
+								//free_login(login);
+
+								//free_agency(agency);
+
+								//free_state(state);
+
+								//bank_agency_//free_logins(agency);
+
 							}
 							else
 							{
-								//system("clear");
 
 								printf("---------------------------EMPLOYEE-----------------------\n");
-								printf("Login Validated!\n");
 
-								employee=bank_employee(BANK_EMPLOYEE_ADVISOR);
+								printf("\nLogin Validated!\n");
 
-								bank_employee_set_login(employee, results);
+								if (userchoice == '4')
+								{
+									userchoice=0;
+									char new_pass[11];
+									char retype_new_pass[11];
 
-								bank_employee_set_agency(employee, agency);
+									while (1)
+									{
+										do
+										{
 
-								bank_agency_employee_add(employee);
+											printf("\nEnter new password:");
 
+										} while (clear() && !scanf(" %10s", new_pass) && clear());
+
+										do
+										{
+
+											printf("\nRetype password:");
+
+										} while (clear() && !scanf(" %10s", retype_new_pass) && clear());
+
+										if (strcmp(retype_new_pass, new_pass) != 0)
+										{
+											printf("\nError: Password mismatch");
+										}
+										else
+										{
+											if (strcmp(pass, new_pass) == 0)
+											{
+												printf("\nWarning Password must be different from old one");
+												printf("\nPlease try again...\n");
+											}
+											else
+											{
+												printf("\nPassword changed");
+												break;
+											}
+										}
+									}
+									bank_login_set_key(results, new_pass);
+
+									encrypt_login_pass(results);
+
+									bank_agency_changed(agency);
+
+									memset(&(pass[0]), 0, strlen(pass));
+									memset(&(retype_new_pass[0]), 0, strlen(retype_new_pass));
+									memset(&(new_pass[0]), 0, strlen(new_pass));
+
+								}
 								bank_json_parse_agency(agency, EMPLOYEES_DATA, 1, JSON_ALLOW_NUL);
-								bank_json_parse_agency(agency, CLIENTS_DATA, 1, JSON_ALLOW_NUL);
 
-								printf("\nPlease wait...\n");
+								employee = bank_agency_get_employee_n(agency, bank_login_get_uuid(results));
 
-								bank_agency_free_logins(agency);
-
-								printf("\nPlease wait...\n");
+								bank_json_parse_agency(agency, CLIENTS_DATA, 0, JSON_ALLOW_NUL);
+								//bank_agency_free_logins(agency);
 
 								break;
 							}
 						}
-						else
-						{
-							fprintf(stderr, "error %s:%d", __FILE__, __LINE__);
-							abort();
-						}
-
 					}
 				}
-				else
-				{
-					//system("clear");
-					printf("\nWRONG user ID or password\n");
-					printf("Please try again!\n");
-					free(decoded);
-				}
+
+				printf("\nWRONG user ID or password\n");
+				printf("Please try again!\n");
+				////free(decoded);
+
 			}
 		}
-		unsigned int userchoice = 0;
 		while (1)
 		{
-			clear();
-			printf("\n---------------------------EMPLOYEE-----------------------\n");
-			printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or l to logout:\n\n");
-			printf("1- Manage you personal informations and bank accounts\n");
-			printf("2- Manage your personal bank accounts\n");
-			printf("3- Clients and agency services\n");
-			printf("4- Reset your password\n");
-
-			do
+			if(choice==0)
 			{
-				userchoice = getchar();
-			} while ((userchoice > '5' || userchoice < '1') && userchoice != 'l');
+				clear();
+				printf("\n---------------------------EMPLOYEE-----------------------\n");
+				printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or l to logout:\n\n");
+				printf("1- View your personal informations and bank accounts\n");
+				printf("2- Manage your personal info\n");
+				printf("3- Clients and agency services\n");
+				printf("4- Reset your password\n");
+
+				do
+				{
+					userchoice = getchar();
+				} while ((userchoice > '4' || userchoice < '1') && userchoice != 'l');
+			}
 
 			switch (userchoice)
 			{
 				case '1':
 				{
+					clear();
 					bank_print_employee(employee);
 					break;
 				}
 				case '2':
 				{
+					new_individual=scan_modify_individual();
+
+					clear();
+
+					bank_print_individual(individual);
+
+					printf("Enter `y` to approve modifications above:");
+
+					if(getchar()=='y')
+					{
+						modify_individual(bank_employee_get_individual(employee), new_individual);
+					}
+
 					break;
 				}
 				case '3':
 				{
-					clear();
-					printf("\n---------------------------EMPLOYEE-----------------------\n");
-					printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu:\n\n");
-					printf("1- Find a Client\n");
-					printf("2- Create a new Client\n");
-					printf("3- Modify a Client\n");
-					printf("4- Create a bank account\n");
-					printf("5- Find a bank account\n");
-					printf("6- Money Deposit\n");
-					printf("7- Money Transfer\n");
-					printf("\nYou can always enter q to quit this menu\n");
 
-					do
+					while (1)
 					{
-						userchoice = getchar();
-					} while ((userchoice > '5' || userchoice < '1') && userchoice != 'l');
-
-					switch (userchoice)
-					{
-					case '1':
-						char firstname[30], lastname[30], birthdate[DATE_SIZE];
-						do
+						if(choice==0)
 						{
-							printf("\nnote: firstname and lastname must not exceed 30 caracters nor contain whitespaces,");
-							printf("\n      use '-' for spaces instead");
+							shared_individual=NULL;
+							new_individual=NULL;
+							individual=NULL;
+							account=NULL;
+							acctype=0;
 
-							printf("\nFirstname: ");
-						} while (!scanf(" %30s", firstname) && clear());
+							clear();
+							printf("\n---------------------------EMPLOYEE-----------------------\n");
+							printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or s to save data:\n\n");
+							printf("1- Find a Client\n");
+							printf("2- Create a new Client\n");
+							printf("3- Modify a Client\n");
+							printf("4- Create a bank account\n");
+							printf("5- Find a bank account\n");
+							printf("6- Money Deposit\n");
+							printf("7- Money Transfer\n");
+							printf("\nYou can always enter s to quit this menu and write data to disk\n");
 
-						do
-						{
-
-							printf("\nLastname: ");
-						} while (!scanf(" %30s", lastname) && clear());
-
-						printf("\nBirthdate search? (y):");
-
-						if (getchar() == 'y')
-						{
 							do
 							{
-								printf("\nnote: date must be entered in this format DDMMYYYY");
-								printf("\nBirthdate: ");
-							} while (!scanf(" %8[0-9]", birthdate) && clear());
-							individual = bank_search_individual(agency, firstname, lastname, birthdate);
+								userchoice = getchar();
+							} while ((userchoice > '7' || userchoice < '1') && userchoice != 's');
 						}
-						else
+						switch (userchoice)
 						{
-							individual = bank_search_individual(agency, firstname, lastname, NULL);
-						}
+							case '1':
+							{
+								do
+								{
+									printf("\nnote: firstname and lastname must not exceed 30 caracters nor contain whitespaces,");
+									printf("\n      use '-' for spaces instead");
 
-						if (individual != NULL)
+									printf("\nFirstname: ");
+								} while (!scanf(" %30s", firstname) && clear());
+
+								do
+								{
+
+									printf("\nLastname: ");
+								} while (!scanf(" %30s", lastname) && clear());
+
+								int c=0;
+
+								if(choice==0)
+								{
+									printf("\nBirthdate search? (y):");
+
+									c=getchar();
+								}
+
+								if (choice!=0 || c == 'y')
+								{
+									do
+									{
+										printf("\nnote: date must be entered in this format DDMMYYYY");
+										printf("\nBirthdate: ");
+									} while (!scanf(" %8[0-9]", birthdate) && clear());
+
+									individual = bank_search_individual(agency, firstname, lastname, birthdate);
+								}
+								else
+								{
+									individual = bank_search_individual(agency, firstname, lastname, NULL);
+								}
+
+								if (individual != NULL)
+								{
+									bank_json_parse_individual(individual, 1, JSON_ALLOW_NUL);
+									clear();
+									bank_print_individual(individual);
+
+									if (choice != 0)
+									{
+										userchoice = choice + 48;
+									}
+									break;
+								}
+								else
+								{
+									if(choice!=0)
+									{
+										userchoice=choice+48;
+										choice=-1;
+									}
+									printf("\n0 match");
+
+									printf("\nEnter any key to exit this view...");
+
+									getchar();
+
+									break;
+								}
+							}
+							case '2':
+							{
+								new_individual = scan_individual(NULL, agency);
+
+								if (bank_individual_get_agency(new_individual) == NULL)
+								{
+									clear();
+									if (choice == 0)
+									{
+										printf("\nError: Individual conflict");
+									}
+									else
+									{
+										userchoice= 48 + choice;
+									}
+
+									individual = bank_search_individual(agency, bank_individual_get(new_individual, BANK_INDIVIDUAL_FIRSTNAME), bank_individual_get(new_individual, BANK_INDIVIDUAL_LASTNAME), bank_individual_get(new_individual, BANK_INDIVIDUAL_BIRTHDATE));
+
+									printf("\nThis identical client were found:");
+
+									bank_json_parse_individual(individual, 1, JSON_ALLOW_NUL);
+									clear();
+									bank_print_individual(individual);
+
+									clear();
+
+									printf("\nTo modify the existant individual with the new data enetered enter (y):");
+
+									if (getchar() == 'y')
+									{
+										modify_individual(individual, new_individual);
+
+										new_individual = individual;
+
+										bank_export_client_info(individual);
+
+										bank_json_dump_individual(individual, 0, 0);
+
+										printf("\nModification is done");
+
+									}
+									choice=0;
+								}
+								else
+								{
+									if (choice != 0)
+									{
+										bank_individual_remove_agency(new_individual);
+										bank_agency_remove_individual(agency, new_individual);
+										choice = -1;
+										printf("\nFailure: This client were not found");
+									}
+									if (choice == 0)
+									{
+										bank_export_client_info(new_individual);
+
+										bank_json_dump_individual(new_individual, 0, 0);
+
+										printf("\nClient created and added successfully");
+									}
+								}
+
+								printf("\n\nEnter any key to continue...");
+								getchar();
+								break;
+							}
+							case '3':
+							{
+								if(choice==-1)
+								{
+									choice=0;
+									break;
+								}
+								if(choice==0)
+								{
+									choice=3;
+									userchoice='2';
+									break;
+								}
+							}
+							case '4':
+							{
+
+								if(choice==-1)
+								{
+									choice=0;
+									clear();
+									printf("\nTo try again enter `y`:");
+
+									if(getchar()!='y')
+									{
+										break;
+									}
+								}
+
+								if(choice==0)
+								{
+									printf("\nNote: Make sure you created a client data before creating him an account");
+
+									printf("\nFinding the client:");
+
+									choice=4;
+									userchoice='1';
+									break;
+								}
+
+								if(acctype==0 && shared_individual==NULL)
+								{
+									clear();
+									printf("\nFilling bank account:\n");
+									do
+									{
+										printf("\n\t--ACCOUNT TYPE--");
+										printf("\n#1 for INDIVIDUAL");
+										printf("\n#2 for SHARED");
+										printf("\nPlease enter the account type:");
+
+									} while ((acctype = getchar()) > '2' && acctype < '1');
+								}
+
+								if(acctype=='2' && shared_individual==NULL)
+								{
+									shared_individual=individual;
+									choice=4;
+									userchoice='1';
+									break;
+								}
+
+								do
+								{
+									clear();
+									printf("\n\t--BANK ACCOUNT TYPE--\n");
+									printf("#1 LIVRETA\n");
+									printf("#2 LIVRETJEUNE\n");
+									printf("#3 LDD\n");
+									printf("#4 PEL\n");
+									printf("#5 COURANT\n");
+									printf("\nPlease enter the account type:");
+
+								} while ((bktype = getchar()) > '5' && bktype < '1');
+
+								if(acctype=='2')
+								{
+									account=create_account_shared(agency, individual, shared_individual, 244 + bktype - 48);
+									if(account==NULL)
+									{
+										printf("Error: This client has already a maximum of shared accounts\n");
+										break;
+									}
+									bank_export_bank_account_info(individual);
+									bank_export_bank_account_info(shared_individual);
+								}else
+								{
+									account = create_account(agency, individual, acctype -48, 244 + bktype - 48);
+									if (account != NULL)
+									{
+										printf("Error: This client has already a maximum of accounts permitted\n");
+										break;
+									}
+									bank_export_bank_account_info(individual);
+								}
+
+								clear();
+
+								bank_print_account(account);
+
+								bank_json_dump_account(account, JSON_ALLOW_NUL);
+
+								choice=0;
+
+								break;
+							}
+							case '5':
+							{
+
+								bank_json_parse_agency(agency, ACCOUNTS_PRINTING, 0, JSON_ALLOW_NUL);
+								printf("\nEnter iban to search for:");
+								do
+								{
+
+									printf("\niban: ");
+								} while (!scanf(" %37s", iban) && clear());
+
+								account=bank_account_get_n(bank_agency_get_accounts(agency), iban);
+
+								bank_json_parse_account(account, 1, JSON_ALLOW_NUL);
+								clear();
+								bank_print_account(account);
+
+								break;
+							}
+							case '6':
+
+								bank_account_money_depot(account, money, currency);
+								break;
+							case '7':
+							{
+								double money;
+								char currency;
+								bank_money_transfer(account, bank_account_get_n(account, iban), money, currency);
+								break;
+							}
+							default:
+							{
+								bank_json_dump_agency(agency, 0, JSON_ALLOW_NUL);
+								break;
+							}
+						}
+						if(userchoice=='s')
 						{
-							bank_print_individual(individual);
 							break;
 						}
-						else
-						{
-							printf("\n0 match");
-							printf("\nEnter any key to exit this view...");
 
-							getchar();
-							break;
-						}
-					case '2':
-						individual_t *new_individual = scan_individual(NULL, agency);
-					case '3':
-						modify_individual(individual, new_individual);
-					case '4':
-						int acctype, bktype;
-						do
-						{
-							printf("\n\t--ACCOUNT TYPE--");
-							printf("\n#1 for INDIVIDUAL");
-							printf("\n#2 for SHARED");
-							printf("\nPlease enter the account type:");
-
-						} while ((acctype = getchar()) > '2' && acctype < '1');
-						do
-						{
-							printf("\n\t--BANK ACCOUNT TYPE--");
-							printf("#1 LIVRETA\n");
-							printf("#2 LIVRETJEUNE\n");
-							printf("#3 PEL\n");
-							printf("#4 COURANT\n");
-							printf("#5 LDD\n");
-							printf("\nPlease enter the account type:");
-
-						} while ((bktype = getchar()) > '5' && bktype < '1');
-						account=create_account(agency, individual, acctype - 48, 195 + bktype);
-					case '5':
-					char iban[IBAN_SIZE];
-
-						bank_json_parse_agency(agency, ACCOUNTS_PRINTING, 1, JSON_ALLOW_NUL);
-
-						do
-						{
-
-							printf("\niban: ");
-						} while (!scanf(" %37s", iban) && clear());
-
-						bank_account_get_n(account, iban);
-					case '6':
-						double money;
-						char currency;
-						bank_account_money_depot(account, money, currency );
-					case '7':
-						double money;
-						char currency;
-						bank_money_transfer(account, bank_account_get_n(account, iban) ,money, currency);
-
-					default:
-						break;
 					}
+
 				}
 				case '4':
 				{
-
+					break;
 				}
 				case '5':
 				{
-
+					break;
 				}
 				case 'q':
 
-					free_login(login);
-					free_individual(individual);
-					free_agency(agency);
-					free_state(state);
-					free(bank);
+					//free_login(login);
+					//free_individual(individual);
+					//free_agency(agency);
+					//free_state(state);
+					//free(data);
 
 					break;
 
 				default:
 
 					printf("Good Bye...\n");
-					free_login(login);
-					free_agency(agency);
-					free_state(state);
+					//free_login(login);
+					//free_agency(agency);
+					//free_state(state);
 					break;
 			}
 
-		}
-		if (userchoice == 'l')
-		{
-			break;
+			if (userchoice == 'l' || userchoice == '4')
+			{
+				if (agency != NULL)
+				{
+					bank_json_dump_agency(agency, 0, 0);
+				}
+				clear();
+				break;
+			}
 		}
 
 	}

@@ -86,16 +86,6 @@ char* login_id_generator(int *code)
 	SIZE=6;
 	SIZE_FULL=10;
 	SIZE_RAND_DUP=2;
-	//MUST BE DONE IN MAIN
-	// struct timeval time; //accurate time to the microseconds
-
-	// gettimeofday(&time, NULL);
-
-	// // microsecond has 1 000 000
-	// // Assuming we do not need quite that accuracy
-	// // Also we do not assume the system clock has that accuracy.
-
-	// srand((time.tv_sec * 1000) + (time.tv_usec / 1000));
 
 	int i;
 

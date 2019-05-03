@@ -1,5 +1,0 @@
-
-Agency state: 31-Haute-Garonne.
-Agency id: 16149
-Agency address: TOULOUSE-CAPITOLE
-Agency ID will be used to find it and append data to it as employees etc...
