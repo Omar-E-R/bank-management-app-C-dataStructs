@@ -425,6 +425,7 @@ individual_t *bank_employee_get_individual(employee_t *employee);
 int bank_money_transfer(account_t *account_sender, char *iban_reciever, double transaction_amount, char currency);
 account_t *bank_individual_get_account_n(individual_t *individual, int num);
 individual_t *bank_account_get_holder_n(account_t *account, int num);
+int bank_export_account_activity(account_t *account, char *month, char *year);
 #endif
 
 #ifndef JSONBANK_H

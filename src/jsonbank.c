@@ -5,6 +5,7 @@
 #define ADMIN_DATA "admin_data"
 #define JSON_EXT ".json"
 #define TMPDIR "./tmp/"
+#define USRDIR "./usr/"
 #define FILENAME_MAX_ 360
 
 
@@ -171,7 +172,7 @@ int bank_json_parse_individual(individual_t *individual, int option, size_t flag
 		return EXIT_FAILURE;
 	}
 
-	if (individual ->address_no1!=NULL)
+	if (individual ->address_no1!=NULL && option==0)
 	{
 		fail("bank_json_parse_individual(1) ALREADY PARSED, PARSING IGNORED");
 		return EXIT_FAILURE;
@@ -553,14 +554,13 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 				return EXIT_FAILURE;
 			}
 
-			iter_indiv = bank_individual(BANK_ACCOUNT_EMPTY);
+			iter_indiv = bank_individual(BANK_ACCOUNT_NONE);
 
 			iter_indiv->status = BANK_OBJECT_EMPTY;
 
 			bank_individual_set_lastname(iter_indiv, lastname);
 			bank_individual_set_firstname(iter_indiv, firstname);
 			bank_individual_set_birthdate(iter_indiv, birthdate);
-
 			strcpy(iter_indiv->uuid, uuid);
 
 			if (status != BANK_LOGIN_EMP)
@@ -655,7 +655,7 @@ int bank_json_parse_agency(agency_t *agency, int function, int option, size_t fl
 
 
 			iter_employee = bank_employee(position);
-			iter_indiv = bank_individual(BANK_ACCOUNT_EMPTY);
+			iter_indiv = bank_individual(BANK_ACCOUNT_NONE);
 			iter_employee->personal_data = iter_indiv;
 
 			iter_employee->status = status;
@@ -1119,6 +1119,7 @@ int bank_json_dump_individual(individual_t *individual, int option, size_t flag)
 
 	json_decref(root);
 	free(path);
+	individual->changes=BANK_OBJECT_CONSTANT;
 	return EXIT_SUCCESS;
 
 }
@@ -1141,7 +1142,7 @@ int bank_json_dump_account(account_t *account, size_t flag)
 	}
 
 	json_error_t error;
-	json_t* root=json_pack_ex(&error, 0, "{s:i, s:s, s:s, s:s, s:s, s:f, s:i, s:i}","status", account->status, "uuid", account->uuid_account, "uuid_activity", account->uuid_activity, "iban", account->iban, "account_no", account->account_no, "balance", account->account_balance, "bank_account_type", account->bank_account_type, "account_type", account->account_type);
+	json_t* root=json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s, s:s, s:f, s:i, s:i}","status", account->status, "uuid", account->uuid_account, "uuid_activity", account->uuid_activity, "iban", account->iban, "account_no", account->account_no, "balance", account->account_balance, "bank_account_type", account->bank_account_type, "account_type", account->account_type);
 
 	json_t *individuals_array = json_array();
 
@@ -1184,6 +1185,7 @@ int bank_json_dump_account(account_t *account, size_t flag)
 
 	free(path);
 	json_decref(root);
+	account->changes=BANK_OBJECT_CONSTANT;
 	return EXIT_SUCCESS;
 
 }
@@ -1210,7 +1212,7 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 
 	if (agency->changes != BANK_OBJECT_CHANGED)
 	{
-		fail("bank_json_dump_agency(0) NO CGANGES WERE RECORDED, DUMPING IGNORED");
+		fail("bank_json_dump_agency(0) NO CHANGES WERE RECORDED, DUMPING IGNORED");
 		return EXIT_SUCCESS;
 	}
 
@@ -1279,12 +1281,6 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 
 		}
 
-#ifdef ADMIN_ACCESS
-		json_object_set_new_nocheck(root, "login_employee", login_array_emp);
-#else
-		json_object_set_new_nocheck(root, "login_client", login_array);
-#endif
-
 
 		//accounts
 
@@ -1327,7 +1323,7 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 #ifndef ADMIN_ACCESS
 			iter_ind=iter_emp->personal_data;
 			//login
-			login = json_pack_ex(&error, 0, "{s:i, s:s, s:s, s:s}", "status", iter_ind->status, "uuid", iter_ind->uuid, "login_id", iter_ind->login->login_id, "login_key", iter_ind->login->login_key);
+			login = json_pack_ex(&error, JSON_ALLOW_NUL, "{s:i, s:s, s:s, s:s}", "status", iter_ind->status, "uuid", iter_ind->uuid, "login_id", iter_ind->login->login_id, "login_key", iter_ind->login->login_key);
 
 			if (!login)
 			{
@@ -1371,9 +1367,10 @@ int bank_json_dump_agency(agency_t *agency, int option, size_t flags)
 			iter_emp=iter_emp->next;
 		}
 
-#ifndef ADMIN_ACCESS
+		json_object_set_new_nocheck(root, "login_client", login_array);
+
 		json_object_set_new_nocheck(root, "login_employee", login_array_emp);
-#endif
+
 		json_object_set_new_nocheck(root, "individuals", individual_array);
 
 		json_object_set_new_nocheck(root, "employees", employee_array);
@@ -1479,6 +1476,8 @@ int bank_json_dump_state(state_t *state, int option, size_t flags)
 		json_dump_data_file(root, "", state->uuid_state, flags);
 
 		json_decref(root);
+
+		state->changes= BANK_OBJECT_CONSTANT;
 
 		return EXIT_SUCCESS;
 
@@ -1638,12 +1637,14 @@ int bank_write_activity(account_t *account, char* activity)
 
 	return EXIT_SUCCESS;
 }
-/*
-int bank_dump_account_activity(account_t *account, size_t flags)
-{
-	char *path = calloc(strlen(account->agency->state->uuid_state) + strlen(account->agency->uuid_agency) + 12 + 1, sizeof(char));
 
-	strcpy(path, account->agency->state->uuid_state);
+int bank_export_account_activity(account_t *account, char* month, char* year)
+{
+	char *path = calloc(strlen(account->agency->state->uuid_state) + strlen(account->agency->uuid_agency) + strlen(account->uuid_activity) + 20 + 1, sizeof(char));
+
+	strcpy(path, DATABASE_DIR);
+
+	strcat(path, account->agency->state->uuid_state);
 
 	strcat(path, "/");
 
@@ -1651,61 +1652,57 @@ int bank_dump_account_activity(account_t *account, size_t flags)
 
 	strcat(path, "/");
 
-	strcat(path, "accounts");
+	strcat(path, "activity");
 
 	strcat(path, "/");
 
-	FILE* fp=fopen(path, "a");
+	path_finder(path);
+
+	strcat(path, account->uuid_activity);
+
+	strcat(path, ".csv");
+
+	printf("\nThis file will be saved as %s%s_%s", USRDIR, account->account_no, account->account_holder[0]);
+
+	printf("\nEnter any key to continue...");
+
+	clear();
+
+	char cmd[350];
+
+	strcpy(cmd, "cat ");
+	strcat(cmd, path);
+	strcat(cmd, " | grep '");
+	strcat(cmd, year);
+	strcat(cmd, "' | grep '");
+	strcat(cmd, month);
+	strcat(cmd, "' >>");
+	strcat(cmd, USRDIR);
+	strcat(cmd, account->account_no);
+	strcat(cmd, "_");
+	strcat(cmd, account->account_holder[0]->firstname);
+	strcat(cmd, ".csv");
+
+
+
+	FILE *fp = popen(cmd, "r");
 
 	if (!fp)
 	{
-		perror("Text file creation");
-		printf("\nfailed to save it into a text file");
+		perror("Pipe in C");
+		printf("\nfailed to open pipe");
 		return EXIT_FAILURE;
 	}
 
 	free(path);
-	json_t* root=json_load_data_file(activity_uuid, flags);
-
-	json_error_t error;
-
-	strcat(activity_uuid, ".csv");
-
-	if (!root)
-	{
-		fail(" error bank_json_dump_account_activity");
-		fprintf(stderr, "Error type: %s %s, at line: %d, column: %d\n", error.source, error.text, error.line, error.column);
-		return NULL;
-	}
-
-
-	FILE *fp = fopen(path, "w");
-	json_t *op_array = json_object_get(operations_object, "operations");
-	json_t *value;
-
-	size_t index;
-	char *date_operation, *libelle, *detail, *montant, *devise;
-
-	fputs("Date de l'operation;Libelle;Detail de l'ecriture;Montant de l'operation;Devise", fp);
-
-	json_array_foreach(op_array, index, value)
-	{
-		if (json_unpack(value, "{s:s, s:s, s:s, s:s, s:s !}", "date_operation", &date_operation, "libelle", &libelle, "detail", &detail, "montant", &montant, "devise", &devise))
-		{
-			json_decref(operations_object);
-			fail("json_unpack object operations: Wrong type, format or incompatible JSON value encountered");
-			return NULL;
-		}
-
-		fprintf(fp, "%s;%s;%s;%s;%s\n", date_operation, libelle, detail, montant, devise);
-		json_decref(value);
-	}
-
 	fclose(fp);
 
-	return path;
+	return EXIT_SUCCESS;
+
 }
 
+
+/*
 char *parse_operations_csv(json_t *operations_object)
 {
 	json_error_t error;

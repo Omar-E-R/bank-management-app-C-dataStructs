@@ -23,7 +23,7 @@ CFLAGS := -ggdb -ljansson -lcrypt -luuid
 
 LFLAGS :=-I$(HDRDIR) -fPIC
 
-manager: $(LIBDIR)/$(TARGET)
+manager: clean $(LIBDIR)/$(TARGET)
 	$(CC) $(MAINSRC) -o $(EXE) -I$(HDRDIR) -L./$(LIBDIR) -lbankmanagementma -ljansson
 	./$(EXE)
 
@@ -38,5 +38,6 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDES)
 .PHONY: clean
 
 clean:
-	rm $(EXE)
+	rm -f $(EXE)
+	rm -f $(OBJDIR)/*
 	clear

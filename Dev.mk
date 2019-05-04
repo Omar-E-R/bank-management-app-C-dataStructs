@@ -40,13 +40,13 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDES)
 .PHONY: clean
 
 clean:
-	rm ./usr/*.txt
-	rm ./root/*.txt
-	rm ./bin/*
-	rm ./lib/libbankmanagement.so
-	rm -R ./database/*
-	rm ./adminInterface
-	rm ./developperInterface
-	rm ./clientInterface
-	rm ./managerInterface
+	rm -f ./usr/*.txt
+	rm -f ./root/*.txt
+	rm -f ./bin/*
+	rm -f ./lib/libbankmanagement*
+	rm -f -R ./database/*
+	rm -f ./adminInterface.exe
+	rm -f ./developperInterface.exe
+	rm -f ./clientInterface.exe
+	rm -f ./managerInterface.exe
 	clear

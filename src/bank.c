@@ -421,7 +421,7 @@ individual_t* bank_account_get_holder_n(account_t *account, int num)
 		fprintf(stderr, "error bank_account_get_holder_n\n");
 		return NULL;
 	}
-	return account->account_holder[num];
+	return account->account_holder[num-1];
 }
 
 
@@ -520,12 +520,13 @@ int bank_account_money_depot(account_t *account, double money_amount, char curre
 		char activity[ACCOUNT_ACTIVITY_SIZE], amount[20];
 
 		sprintf(amount, "%.2lf", money_amount);
-		amount[10] = '\0';
+		amount[19] = '\0';
 		time_t timeoftheday;
 
 		time(&timeoftheday);
 
 		strncpy(activity, ctime(&timeoftheday), 24);
+		activity[24]='\0';
 		strcat(activity, LIBELLE_D);
 		strcat(activity, "depot espece en agence no:");
 		strcat(activity, account->agency->agency_id);
@@ -1164,7 +1165,7 @@ account_t* bank_individual_get_account_n(individual_t *individual, int num)
 	if(individual!=NULL)
 	{
 
-		return individual->bank_account[num];
+		return individual->bank_account[num-1];
 	}
 	fprintf(stderr, "error bank_individual_get_account\n");
 	return NULL;
@@ -1221,7 +1222,7 @@ agency_t* bank_individual_get_agency(individual_t *individual)
 
 individual_t *bank_search_individual(agency_t *agency, char *firstname, char *lastname, char *birthdate)
 {
-	if (agency == NULL || agency->individuals == NULL || agency->status != BANK_OBJECT_INIT)
+	if (agency == NULL || agency->individuals == NULL)// || agency->status != BANK_OBJECT_INIT)
 	{
 		fprintf(stderr, "error search_individual\n");
 		return NULL;
@@ -1252,6 +1253,8 @@ individual_t *bank_search_individual(agency_t *agency, char *firstname, char *la
 		iter = iter->next;
 
 	} while (iter != NULL);
+
+	fprintf(stderr, "individual not found\n");
 
 	return NULL;
 }
@@ -3729,7 +3732,6 @@ int bank_money_transfer(account_t* account_sender, char* iban_reciever, double t
 				if(var_acc!=NULL)
 				{
 					done=0;
-					break;
 				}
 			}
 			var_ag = var_ag->next;

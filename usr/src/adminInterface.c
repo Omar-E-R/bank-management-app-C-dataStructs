@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
 
 			if (!fp)
 			{
-				fprintf(stderr, "\n%d:%d:", __FILE__, __LINE__);
+				fprintf(stderr, "\n%s:%d:", __FILE__, __LINE__);
 				fprintf(stderr, "error opening pipe: ADMIN INTERFACE");
 				exit(EXIT_FAILURE);
 			}
@@ -1319,6 +1319,7 @@ int main(int argc, char *argv[])
 							break;
 						}
 					}
+					break;
 				}
 				case '5':
 				{

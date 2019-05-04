@@ -11,7 +11,9 @@ int main(int argc, char *argv[])
 	bank_t *data = bank();
 
 	char ag_code[3], st_code[3];
-
+	char month[12], year[5], iban[IBAN_SIZE];
+	double money;
+	char currency;
 	json_set_alloc_funcs(secure_malloc, secure_free);
 	bank_json_parse_bank(data, 0, 0);
 
@@ -140,7 +142,6 @@ int main(int argc, char *argv[])
 								printf("\nPlease wait...\n");
 
 								bank_json_parse_individual(individual, 1, JSON_ALLOW_NUL);
-
 								break;
 							}
 						}
@@ -162,12 +163,10 @@ int main(int argc, char *argv[])
 			printf("\n---------------------------CLIENT-----------------------\n");
 			printf("\nEnter 1, 2, 3 or 4 to enter the correspondant menu or l to logout:\n\n");
 			printf("1- Edit your personal informations\n");
-			printf("2- View you personal informations\n");
-			printf("3- View your bank accounts\n");
-			printf("4- Export bank accounts activity in a CSV format\n");
-			printf("5- Transfer money\n");
-			printf("6- Money Deposit\n");
-			printf("7- Reset your password\n");
+			printf("2- View you personal informations and bank accounts\n");
+			printf("3- Export bank accounts activity in a CSV format\n");
+			printf("4- Transfer money\n");
+			printf("5- Reset your password\n");
 
 			do
 			{
@@ -175,38 +174,156 @@ int main(int argc, char *argv[])
 			} while ((userchoice > '5' || userchoice < '1') && userchoice != 'l');
 
 			//system("clear");
-
+			individual_t* new_individual;
 			switch (userchoice)
 			{
-			case '1':
-				break;
-			case '2':
-				break;
-			case '3':
+				case '1':
+				{
+					new_individual=scan_modify_individual();
+					modify_individual(individual, new_individual);
+					bank_json_dump_individual(individual, 1, 0);
+					break;
+				}
+				case '2':
+				{
+					bank_print_individual(individual);
+					break;
+				}
+				case '3':
+				{
 
+					do
+					{
+						printf("\nEnter which month's activity to export:\n1-Jan\n2-Feb\n3-Apr\n4-Mar\n5-May\n6-Jun\n7-Jul\n8-Aug\n9-Sep\n10-Oct\n11-Nov\n12-Dec\n");
+						scanf("%d", &userchoice);
+					} while ((userchoice > 12 || userchoice < 1));
 
-			case '4':
-				break;
-			case '5':
-				break;
-			case 'q':
+					switch(userchoice)
+					{
+						case 1:
+							strcpy(month, "Jan");
+							break;
+						case 2:
+							strcpy(month, "Feb");
+							break;
+						case 3:
+							strcpy(month, "Mar");
+							break;
+						case 4:
+							strcpy(month, "Avr");
+							break;
+						case 5:
+							strcpy(month, "May");
+							break;
+						case 6:
+							strcpy(month, "Jun");
+							break;
+						case 7:
+							strcpy(month, "Jul");
+							break;
+						case 8:
+							strcpy(month, "Aug");
+							break;
+						case 9:
+							strcpy(month, "Sep");
+							break;
+						case 10:
+							strcpy(month, "Oct");
+							break;
+						case 11:
+							strcpy(month, "Nov");
+							break;
+						case 12:
+							strcpy(month, "Dec");
+							break;
+						default:
+							break;
+					}
 
-				//free_login(login);
-				//free_individual(individual);
-				//free_agency(agency);
-				//free_state(state);
-				//free(bank);
+					do
+					{
+						printf("\nEnter which month's activity to export:\n1-Jan\n2-Feb\n3-Apr\n4-Mar\n5-May\n6-Jun\n7-Jul\n8-Aug\n9-Sep\n10-Oct\n11-Nov\n12-Dec\n");
+						scanf("%s", year);
+					} while ((atoi(year) < 2019 ));
 
-				break;
+					int i = bank_individual_has_account(individual), j = '1';
 
-			default:
+					bank_print_individual(individual);
 
-				printf("Good Bye...\n");
-				//free_login(login);
+					if (i > 1)
+					{
+						printf("\nThis client has %d bank accounts", i);
+						do
+						{
+							printf("\nPlease choose one of them by entering 1 for first, 2 for second etc..");
 
-				//free_agency(agency);
-				//free_state(state);
-				break;
+						} while ((j = getchar()) > i + 48 && j < '1');
+					}
+
+					bank_export_account_activity(bank_individual_get_account_n(individual, j-48), month, year);
+
+					break;
+				}
+				case '4':
+				{
+					do
+					{
+
+						printf("\nEnter reciever's bank account iban");
+						printf("\niban: ");
+					} while (!scanf(" %40s", iban) && clear());
+
+					do
+					{
+
+						printf("\nEnter E for euros and D for dollars");
+						printf("\ncurrency:");
+					} while (clear() && !scanf(" %c", &currency) && clear());
+
+					do
+					{
+
+						printf("\nEnter amount");
+						printf("\namount: ");
+					} while (!scanf(" %lf", &money) && clear());
+					int i = bank_individual_has_account(individual), j = '1';
+
+					bank_print_individual(individual);
+
+					if (i > 1)
+					{
+						printf("\nThis client has %d bank accounts", i);
+						do
+						{
+							printf("\nPlease choose one of them by entering 1 for first, 2 for second etc..");
+
+						} while ((j = getchar()) > i + 48 && j < '1');
+					}
+
+					bank_money_transfer(bank_individual_get_account_n(individual, j), iban, money, currency);
+
+					break;
+				}
+				case '5':
+					break;
+				case 'q':
+
+					//free_login(login);
+					//free_individual(individual);
+					//free_agency(agency);
+					//free_state(state);
+					//free(bank);
+
+					break;
+
+				default:
+
+					printf("Good Bye...\n");
+					//free_login(login);
+
+					//free_agency(agency);
+					//free_state(state);
+					break;
 			}
 			if (userchoice == 'l')
 			{

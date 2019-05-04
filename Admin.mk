@@ -41,5 +41,5 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDES)
 .PHONY: clean
 
 clean:
-	rm $(EXE)
+	rm -f $(EXE)
 	clear

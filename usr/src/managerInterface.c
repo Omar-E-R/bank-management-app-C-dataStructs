@@ -310,6 +310,7 @@ int main(int argc, char *argv[])
 
 								bank_json_parse_agency(agency, ACCOUNTS_PRINTING, 0, 0);
 
+
 								//bank_agency_free_logins(agency);
 
 								break;
@@ -420,6 +421,7 @@ int main(int argc, char *argv[])
 
 								if(choice==0)
 								{
+									clear();
 									printf("\nBirthdate search? (y):");
 
 									c=getchar();
@@ -699,16 +701,18 @@ int main(int argc, char *argv[])
 								{
 									clear();
 									printf("\nDo you want to search by name or iban?");
-									printf("\nEnter `i` for iban:");
+									printf("\nEnter `i` for iban (or anything else for name):");
+
 									if (getchar() == 'i')
 									{
 										userchoice = '5';
 									}
+									else
+									{
+										userchoice = '1';
+									}
 
 									choice = 6;
-
-									userchoice = '1';
-
 									break;
 								}
 
@@ -716,7 +720,7 @@ int main(int argc, char *argv[])
 								{
 									choice = 0;
 
-									int i = bank_individual_has_account(individual), j = 0;
+									int i = bank_individual_has_account(individual), j = '1';
 
 									if (i > 1)
 									{
@@ -735,9 +739,9 @@ int main(int argc, char *argv[])
 										break;
 									}
 
-									account = bank_individual_get_account_n(individual, j);
+									account = bank_individual_get_account_n(individual, j-48);
 								}
-
+								clear();
 								do
 								{
 
@@ -752,12 +756,20 @@ int main(int argc, char *argv[])
 									printf("\namount: ");
 								} while (!scanf(" %lf", &money) && clear());
 
+								if(!bank_account_is_shared(account))
+								{
+									bank_account_money_depot(bank_account_get_n(bank_agency_get_accounts(agency),bank_account_get(account,BANK_ACCOUNT_IBAN)), money, currency, 0);
+								}
 								bank_account_money_depot(account, money, currency, 1);
 
 								bank_json_dump_account(account, JSON_ALLOW_NUL);
 
-								choice = 0;
+								printf("\nDONE");
+								printf("\n\nEnter any key to exit this view...");
 
+								getchar();
+
+								choice = 0;
 								break;
 							}
 							case '7':
@@ -793,7 +805,7 @@ int main(int argc, char *argv[])
 							}
 							default:
 							{
-								bank_json_dump_agency(agency, 0, JSON_ALLOW_NUL);
+								bank_json_dump_agency(agency, 1, JSON_ALLOW_NUL);
 								break;
 							}
 						}
@@ -836,7 +848,7 @@ int main(int argc, char *argv[])
 			{
 				if (agency != NULL)
 				{
-					bank_json_dump_agency(agency, 0, 0);
+					bank_json_dump_agency(agency, 1, 0);
 				}
 				clear();
 				break;
